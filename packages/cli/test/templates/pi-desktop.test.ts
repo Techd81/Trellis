@@ -73,16 +73,37 @@ describe("pi-desktop templates", () => {
   const files = collectPiDesktopTemplates();
   const piFiles = collectPiTemplates();
 
-  it("writes exactly the pi surface plus the plugin wrapper", () => {
-    const expected = [
-      ...[...piFiles.keys()].filter(
-        (path) => path !== ".pi/settings.json" && path !== ".pi/extensions/trellis/index.ts",
-      ),
+  it("writes the shared pi files plus the plugin wrapper", () => {
+    // Listed explicitly: the old expectation was built by subtracting from
+    // `collectPiTemplates()`, which shares `collectPiSurface()` with this
+    // platform, so a change inside that helper could not fail here.
+    const nonSkill = [...files.keys()]
+      .filter((file) => !file.startsWith(".agents/skills/"))
+      .sort();
+    expect(nonSkill).toEqual([
       ".pi-desktop/trellis/agent/index.ts",
       ".pi-desktop/trellis/main.js",
       ".pi-desktop/trellis/manifest.json",
-    ].sort();
-    expect([...files.keys()].sort()).toEqual(expected);
+      ".pi/agents/trellis-check.md",
+      ".pi/agents/trellis-implement.md",
+      ".pi/agents/trellis-research.md",
+      ".pi/prompts/trellis-continue.md",
+      ".pi/prompts/trellis-finish-work.md",
+      ".pi/prompts/trellis-start.md",
+    ]);
+
+    // The skill files are rendered from the same helper for both platforms, so
+    // they must be present and byte-identical to what the pi CLI receives.
+    const skills = [...files.keys()].filter((file) =>
+      file.startsWith(".agents/skills/"),
+    );
+    expect(skills.length).toBe(
+      [...piFiles.keys()].filter((file) => file.startsWith(".agents/skills/"))
+        .length,
+    );
+    for (const skill of skills) {
+      expect(piFiles.get(skill)).toBe(files.get(skill));
+    }
   });
 
   it("skips the two files the desktop host never reads", () => {

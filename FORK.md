@@ -87,6 +87,7 @@ pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，
 - 新版本发布后 `PUT` 返回 **202**，registry 要 3~6 分钟才看得到，这期间 `npm view` / `npm i` 会 404 —— 不是失败，等就行。
 - bypass-2FA 的 granular token 能发布，但**不能 unpublish**（403）。发废的版本只能去 npm 的包设置页 `Delete version` 手动删。
 - 仓库里**没有 CI 发布工作流**：上游那份 `publish.yml` 会以 `@mindfoldhq/trellis` 的名义上传，已删除。发布只走本地 `scripts/publish-fork.ps1`，凭据留在本机 `~/.npmrc`；CI（`.github/workflows/ci.yml`）只负责 typecheck / lint / 构建 / 测试。
+- 上游的 `pnpm release*` 那套（`release.js` / `release-preflight.js` / `create-manifest.js` / `check-manifest-continuity.js`）**不要用，也用不了**：它写死官方包名 `@mindfoldhq/trellis`、要求 core 与 CLI 版本完全相等、还要求每个已发布版本都有迁移清单。本 fork 的 CLI 独立升版、core 跟随上游，跑起来必然报错（`Version mismatch` / `Published-but-missing manifests`）。发布请用 `scripts/publish-fork.ps1`。
 
 ## 跟随上游更新
 

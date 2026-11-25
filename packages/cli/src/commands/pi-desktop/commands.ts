@@ -124,6 +124,7 @@ function buildRow(
   manifest: PluginManifest,
   now: Date,
 ): PluginRegistryRow {
+  const description = descriptionOf(manifest);
   return {
     id: manifest.id,
     name: "Trellis",
@@ -136,7 +137,9 @@ function buildRow(
     permissions: manifest.permissions ?? [],
     path: installedDir,
     capabilities: ["agentExtension"],
-    description: descriptionOf(manifest),
+    // Omitted when the manifest has no description: spreading an explicit
+    // `undefined` over the stored row would erase the text the user sees.
+    ...(description === undefined ? {} : { description }),
     installedAt: now.toISOString(),
     updatedAt: now.toISOString(),
     autoUpdate: false,
@@ -237,6 +240,52 @@ function syncSubagents(
 
   return { skipped: false, written, unchanged, dir };
 }
+
+/** Remove directories left empty after stale plugin files were deleted. */
+function pruneEmptyDirs(root: string): void {
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const child = path.join(root, entry.name);
+    pruneEmptyDirs(child);
+    if (fs.readdirSync(child).length === 0) fs.rmdirSync(child);
+  }
+}
+
+/**
+ * Make the installed plugin match the repository copy without ever removing
+ * the directory.
+ *
+ * A whole-directory `rm` + `cp` leaves every repository without a plugin when
+ * the copy fails halfway (the host holding a file open, a full disk, a source
+ * file deleted between listing and copying), and it rewrites every file on
+ * every install, which the idempotency contract forbids. Files are compared by
+ * content and written atomically instead; files an older Trellis left behind
+ * are deleted (with their now-empty directories) so the host cannot load a mix
+ * of two versions.
+ */
+function syncPluginDir(src: string, installedDir: string): void {
+  const source = hashPluginFiles(src);
+  const existing = hashPluginFiles(installedDir);
+  if (!fs.existsSync(installedDir)) {
+    fs.mkdirSync(installedDir, { recursive: true });
+  }
+
+  for (const file of listPluginFiles(src)) {
+    if (existing.get(file) === source.get(file)) continue;
+    const target = path.join(installedDir, ...file.split("/"));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    writeFileAtomic(
+      target,
+      fs.readFileSync(path.join(src, ...file.split("/"))),
+    );
+  }
+
+  const stale = [...existing.keys()].filter((file) => !source.has(file));
+  for (const file of stale) {
+    fs.rmSync(path.join(installedDir, ...file.split("/")), { force: true });
+  }
+  if (stale.length > 0) pruneEmptyDirs(installedDir);
+}
 /**
  * Install the generated plugin into the host: copy its files, register one row
  * in `plugins/registry.json`, write the global sub-agents the host actually
@@ -281,13 +330,9 @@ export function installPiDesktopPlugin(options: CommonOptions): InstallReport {
     ? []
     : readUserSkills(skillRegistryPath);
 
-  if (!options.dryRun) {
-    // Whole-directory replace: a stale `agent/` from an older Trellis must not
-    // survive next to the new one, or the host loads a mix of both.
-    fs.rmSync(installedDir, { recursive: true, force: true });
-    fs.mkdirSync(path.dirname(installedDir), { recursive: true });
-    fs.cpSync(src, installedDir, { recursive: true });
-  }
+  // Files are synced, not re-copied: a second install must not rewrite the
+  // plugin the host is watching (see `syncPluginDir`).
+  if (!options.dryRun) syncPluginDir(src, installedDir);
 
   const upsert = upsertPluginRow(
     rows,
@@ -449,6 +494,11 @@ export function uninstallPiDesktopPlugin(
   const skillsPath = skillsRegistryFile(dataDir);
   const project = normalizeProjectPath(options.cwd);
 
+  // Both host registries are read and validated before the first write: a
+  // `skills.json` Trellis does not understand must abort the uninstall, not
+  // leave the row and the plugin directory already gone.
+  const existingSkills: UserSkillRow[] = readUserSkills(skillsPath);
+
   const rows = readPluginRegistry(registryPath);
   const index = rows.findIndex(
     (candidate) => candidate?.id === PI_DESKTOP_PLUGIN_ID,
@@ -489,14 +539,16 @@ export function uninstallPiDesktopPlugin(
   }
 
   // Files another repository still needs stay put, or its install breaks.
-  const shared = scopeRetained.length > 0;
+  // A missing row means the host (or a previous uninstall) rewrote
+  // `registry.json` under us: without it, no list of covered repositories is
+  // left to prove the shared files are unused, so they stay too.
+  const rowMissing = row === null;
+  const shared = scopeRetained.length > 0 || rowMissing;
   let removedDir = false;
   if (!shared && fs.existsSync(installedDir)) {
     if (!dryRun) fs.rmSync(installedDir, { recursive: true, force: true });
     removedDir = true;
   }
-
-  const existingSkills: UserSkillRow[] = readUserSkills(skillsPath);
   const skills = removeRepoSkillRows(
     existingSkills,
     ownedSkillFiles(options.cwd),

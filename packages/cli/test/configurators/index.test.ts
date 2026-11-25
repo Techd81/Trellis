@@ -329,6 +329,8 @@ describe("collectPlatformTemplates", () => {
     // Pi discovers `.agents/skills/` natively; Trellis writes there (shared
     // with Codex/Gemini) instead of a private `.pi/skills/` copy (#447).
     pi: ".agents/skills",
+    // PI-Desktop indexes the same shared skills root as the pi CLI.
+    "pi-desktop": ".agents/skills",
     zcode: ".zcode/skills",
   };
 

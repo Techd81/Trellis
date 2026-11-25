@@ -5,10 +5,11 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve as resolvePath } from "node:path";
 import { Command } from "commander";
 import {
   installPiDesktopPlugin,
@@ -430,6 +431,76 @@ describe("trellis pi-desktop install", () => {
     );
     expect(existsSync(join(dataDir, "plugins", "installed"))).toBe(false);
   });
+  it("re-syncs the install directory without rewriting unchanged files", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+    const first = installPiDesktopPlugin(optionsFor(repo, dataDir));
+    const installedManifest = join(first.installedDir, "manifest.json");
+    const before = statSync(installedManifest).mtimeMs;
+    // A file an older Trellis left behind must not survive the next install,
+    // and the files that already match must not be rewritten: the host watches
+    // this directory.
+    writeFileSync(join(first.installedDir, "agent", "stale.js"), "old\n");
+
+    installPiDesktopPlugin(optionsFor(repo, dataDir));
+
+    expect(statSync(installedManifest).mtimeMs).toBe(before);
+    expect(existsSync(join(first.installedDir, "agent", "stale.js"))).toBe(false);
+  });
+
+  it("lets PI_DESKTOP_DATA_DIR and AGENTS_HOME stand in for the flags", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+
+    const report = installPiDesktopPlugin({
+      cwd: repo,
+      env: {
+        PI_DESKTOP_DATA_DIR: dataDir,
+        AGENTS_HOME: join(dataDir, "agents-home"),
+      },
+      hostRunning: () => false,
+      now: NOW,
+    });
+
+    expect(report.dataDir).toBe(resolvePath(dataDir));
+    expect(report.subagents.dir).toBe(
+      join(resolvePath(dataDir), "agents-home", "subagents"),
+    );
+  });
+
+  it("honours --skip-skills and --skip-subagents", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+
+    const report = installPiDesktopPlugin({
+      ...optionsFor(repo, dataDir),
+      skipSkills: true,
+      skipSubagents: true,
+    });
+
+    expect(report.skills.skipped).toBe(true);
+    expect(report.subagents.skipped).toBe(true);
+    expect(existsSync(join(dataDir, "agent-capabilities", "skills.json"))).toBe(
+      false,
+    );
+    expect(existsSync(report.subagents.dir)).toBe(false);
+  });
+
+  it("keeps a skill the user enabled globally", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+    const first = installPiDesktopPlugin(optionsFor(repo, dataDir));
+    const rows = readJson(first.skills.path) as UserSkillRow[];
+    // The user enabled the skill for every project in the host's settings.
+    rows[0].scope = { mode: "global", projects: [] };
+    writeFileSync(first.skills.path, JSON.stringify(rows));
+
+    installPiDesktopPlugin(optionsFor(repo, dataDir));
+
+    const after = readJson(first.skills.path) as UserSkillRow[];
+    expect(after[0].scope).toEqual({ mode: "global", projects: [] });
+  });
+
 });
 
 describe("trellis pi-desktop uninstall", () => {
@@ -567,6 +638,46 @@ describe("trellis pi-desktop uninstall", () => {
 
     const forced = uninstallPiDesktopPlugin({ ...running, force: true });
     expect(forced.removedRow).toBe(true);
+  });
+
+  it("uninstalls nothing when the skill registry is unreadable", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+    const installed = installPiDesktopPlugin(optionsFor(repo, dataDir));
+    // The host owns skills.json; a shape Trellis does not understand has to
+    // abort before the registry row and the plugin are already gone, or the
+    // repository is left half uninstalled with no way to retry.
+    writeFileSync(installed.skills.path, JSON.stringify({ skills: [] }));
+
+    expect(() => uninstallPiDesktopPlugin(optionsFor(repo, dataDir))).toThrow(
+      /not a skill registry/,
+    );
+
+    const rows = readJson(installed.registryPath) as { id: string }[];
+    expect(rows.map((row) => row.id)).toEqual([PI_DESKTOP_PLUGIN_ID]);
+    expect(existsSync(join(installed.installedDir, "manifest.json"))).toBe(true);
+  });
+
+  it("keeps the shared files when the host rewrote the row away", () => {
+    const repo = scaffoldRepo();
+    const dataDir = dataDirForTest();
+    const installed = installPiDesktopPlugin(optionsFor(repo, dataDir));
+    // The host owns registry.json: a rewrite can drop the row while other
+    // repositories still run Trellis, so the shared files must survive.
+    writeFileSync(installed.registryPath, JSON.stringify([]));
+
+    const report = uninstallPiDesktopPlugin(optionsFor(repo, dataDir));
+
+    expect(report.removedRow).toBe(false);
+    expect(report.scopeRetained).toEqual([]);
+    expect(report.removedDir).toBe(false);
+    expect(existsSync(join(installed.installedDir, "manifest.json"))).toBe(true);
+    expect(report.removedSubagents).toEqual([]);
+    expect(existsSync(join(installed.subagents.dir, "trellis-check.md"))).toBe(
+      true,
+    );
+    // This repository's own skill row is still dropped.
+    expect(report.removedSkills).toEqual(["trellis-demo"]);
   });
 });
 

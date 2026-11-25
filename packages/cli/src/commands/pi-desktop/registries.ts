@@ -287,17 +287,22 @@ export function planUserSkills(
     const previousScope = Array.isArray(previous.scope?.projects)
       ? previous.scope.projects
       : [];
+    // The user enabled this skill globally: registering the repository it lives
+    // in must not narrow it back to a project list, or the skill silently
+    // disappears from every other project.
+    const previousGlobal = previous.scope?.mode === "global";
     const scoped = previousScope.some((entry) =>
       sameProjectPath(entry, project),
     );
     const next: UserSkillRow = {
       ...row,
-      scope: scoped
-        ? previous.scope
-        : {
-            mode: "projects",
-            projects: [...previousScope, project],
-          },
+      scope:
+        previousGlobal || scoped
+          ? previous.scope
+          : {
+              mode: "projects",
+              projects: [...previousScope, project],
+            },
     };
     if (withoutTimestamp(previous) === withoutTimestamp(next)) {
       rows[index] = { ...next, updatedAt: previous.updatedAt };

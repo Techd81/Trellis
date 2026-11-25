@@ -466,11 +466,16 @@ export const AI_TOOLS: Record<AITool, AIToolConfig> = {
   /**
    * PI-Desktop — the Electron host for the pi agent (vastsa/PI-Desktop).
    *
-   * The host resolves project slash templates from `.pi/prompts`, reads
-   * `.pi/agents/*.md` as sub-agent types, and indexes `.agents/skills/**`, so
-   * this platform reuses pi's prompts/agents/skills verbatim. That shared
-   * surface is rendered from `collectPiSurface()` with *pi's* context, which
-   * keeps the two platforms byte-identical on the paths they both write.
+   * The host resolves project slash templates from `.pi/prompts` and indexes
+   * `.agents/skills/**`, so the prompts and skills are shared with `pi`
+   * verbatim. Sub-agents are not: the host scans only `~/.agents/subagents`
+   * and has no project-level discovery, so `.pi/agents/*.md` is invisible to
+   * its Task tool and `trellis pi-desktop install` translates the three roles
+   * into the host's shape there.
+   *
+   * The shared prompts/skills surface is rendered from `collectPiSurface()`
+   * with *pi's* context, which keeps the two platforms byte-identical on the
+   * paths they both write.
    *
    * What the host does NOT do is load project extensions:
    * `.pi/extensions/trellis/index.ts` is inert until it is imported. This
