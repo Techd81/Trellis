@@ -146,6 +146,23 @@ try {
         Invoke-Step "Running the PI-Desktop tests" {
             Push-Location (Join-Path $repo "packages/cli")
             try {
+                # registry-invariants shells out to `python3`, which resolves to a
+                # Microsoft Store stub on a stock Windows install. Point it at a real
+                # interpreter unless the caller already chose one.
+                if (-not $env:PYTHON_CMD) {
+                    foreach ($candidate in @("python", "py", "python3")) {
+                        $found = Get-Command $candidate -ErrorAction SilentlyContinue | Select-Object -First 1
+                        if ($found -and $found.Source -notmatch "WindowsApps") {
+                            $env:PYTHON_CMD = $found.Source
+                            break
+                        }
+                    }
+                    if ($env:PYTHON_CMD) {
+                        Write-Host "    PYTHON_CMD=$env:PYTHON_CMD"
+                    } else {
+                        Write-Host "    no real python interpreter found; registry-invariants may fail" -ForegroundColor Yellow
+                    }
+                }
                 & npx vitest run --maxWorkers=3 test/commands/pi-desktop.test.ts test/templates/pi-desktop.test.ts test/registry-invariants.test.ts
                 if ($LASTEXITCODE -ne 0) { throw "tests failed" }
             } finally {
