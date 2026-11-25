@@ -72,9 +72,10 @@ npm install -g @mindfoldhq/trellis --force
 ### 发布（首次安装前，以及每次跟随上游之后）
 
 ```powershell
-npm login                                # 需要拥有 @awesome_dura 作用域
+npm login                                # 账号 awsome_dura；@awesome_dura 作用域挂在 org 上
 pwsh ./scripts/publish-fork.ps1 -DryRun  # 只看清单，不上传
 pwsh ./scripts/publish-fork.ps1          # 真发布
+pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，带上一次性验证码
 ```
 
 脚本会：校验在 `feat/pi-desktop` 且工作区干净 → `pnpm build` → 把根目录的 `README.md`/`LICENSE` 复制进 `packages/cli`（npm 只打包包目录里的文件）→ `npm publish --access public --ignore-scripts` → 回读 registry 版本。

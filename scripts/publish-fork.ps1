@@ -22,6 +22,10 @@
 .PARAMETER Tag
     npm dist-tag to publish under. Defaults to `latest`.
 
+.PARAMETER Otp
+    One-time password, for accounts whose 2FA policy covers writes. Leave it
+    out when the token already bypasses 2FA.
+
 .EXAMPLE
     pwsh ./scripts/publish-fork.ps1 -DryRun
 .EXAMPLE
@@ -29,7 +33,8 @@
 #>
 param(
     [switch]$DryRun,
-    [string]$Tag = "latest"
+    [string]$Tag = "latest",
+    [string]$Otp
 )
 
 $ErrorActionPreference = "Stop"
@@ -98,6 +103,7 @@ try {
         try {
             $publishArgs = @("publish", "--access", "public", "--ignore-scripts", "--tag", $Tag)
             if ($DryRun) { $publishArgs += "--dry-run" }
+            if ($Otp) { $publishArgs += "--otp=$Otp" }
             & npm @publishArgs
             if ($LASTEXITCODE -ne 0) { throw "npm publish failed (logged in as: $((& npm whoami 2>&1) -join ' '))" }
         } finally {
