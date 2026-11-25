@@ -10,7 +10,7 @@ Create a migration manifest for a new patch, beta, rc, or minor release based on
 
 Trellis currently publishes two npm packages from the same git tag:
 
-- `@mindfoldhq/trellis`
+- `@awesome_dura/trellis`
 - `@mindfoldhq/trellis-core`
 
 Both packages must always share the exact same version and npm dist-tag. Source uses `workspace:*`; the packed CLI must depend on the exact published core version.
@@ -211,7 +211,7 @@ Verify:
    names, so it only finds a commit that is itself a branch or tag tip. A
    pointer to any earlier commit on `main` reports FAIL even though CI can
    fetch it fine.
-5. `@mindfoldhq/trellis` and `@mindfoldhq/trellis-core` versions still match.
+5. `@awesome_dura/trellis` and `@mindfoldhq/trellis-core` versions still match.
 
 ## Step 11: Publish Through CI
 
@@ -227,7 +227,7 @@ pnpm release:promote
 After CI succeeds, verify public npm:
 
 ```bash
-npm view @mindfoldhq/trellis@<version> version dist-tags --json --registry=https://registry.npmjs.org/
+npm view @awesome_dura/trellis@<version> version dist-tags --json --registry=https://registry.npmjs.org/
 npm view @mindfoldhq/trellis-core@<version> version dist-tags --json --registry=https://registry.npmjs.org/
 ```
 
@@ -239,7 +239,7 @@ Breaking releases must run end-to-end migration in a throwaway directory:
 
 ```bash
 mkdir /tmp/migrate-test && cd /tmp/migrate-test && git init -q .
-npx -y @mindfoldhq/trellis@<last-ga> init -y -u test --claude --cursor --<platforms>
+npx -y @awesome_dura/trellis@<last-ga> init -y -u test --claude --cursor --<platforms>
 node <repo>/packages/cli/dist/cli/index.js update --migrate --dry-run
 yes | node <repo>/packages/cli/dist/cli/index.js update --migrate --force
 yes | node <repo>/packages/cli/dist/cli/index.js update
