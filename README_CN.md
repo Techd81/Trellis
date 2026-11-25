@@ -1,7 +1,7 @@
 > **私有 fork —— `feat/pi-desktop` 分支。** 本分支把 [PI-Desktop](https://github.com/vastsa/PI-Desktop) 作为一等平台接入：
-> `trellis init --pi-desktop`、`trellis pi-desktop install|status|uninstall`。下面 `npm install -g @mindfoldhq/trellis`
-> 装的是**上游**包，不含这些能力；要装本分支的构建，在仓库根目录执行 `pwsh ./scripts/install-fork.ps1`，
-> 同步上游的流程见 [FORK.md](FORK.md)。
+> `trellis init --pi-desktop`、`trellis pi-desktop install|status|uninstall`。
+> 安装：`npm install -g @techd81/trellis@latest`；或从源码执行 `pwsh ./scripts/install-fork.ps1`。
+> 跟随上游的流程见 [FORK.md](FORK.md)。
 
 <p align="center">
 <picture>
@@ -25,8 +25,8 @@
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/v/@mindfoldhq/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/dw/@mindfoldhq/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@techd81/trellis"><img src="https://img.shields.io/npm/v/@techd81/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@techd81/trellis"><img src="https://img.shields.io/npm/dw/@techd81/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.trytrellis.app/zh"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
@@ -60,7 +60,7 @@
 
 ```bash
 # 1. 安装 Trellis
-npm install -g @mindfoldhq/trellis@latest
+npm install -g @techd81/trellis@latest
 
 # 2. 在仓库中初始化
 trellis init -u your-name

@@ -13,8 +13,8 @@
     Vendoring the build into an existing upstream package is not needed: the
     packed tarball pulls `@mindfoldhq/trellis-core` from npm itself.
 
-    Use this instead of `npm install -g @mindfoldhq/trellis`, which installs the
-    upstream package without `--pi-desktop`.
+    Prefer `npm install -g @techd81/trellis@latest` once that package is
+    published; this script is the build-from-source path.
 
 .PARAMETER SkipTests
     Skip the test run (faster, but you lose the check that the checkout is sane).

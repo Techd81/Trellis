@@ -41,17 +41,19 @@ git -C docs-site apply ../docs-site.pi-desktop.patch
 
 之所以必须打上：`registry-invariants` 会核对 `docs-site` 里的平台计数和 init flag 列表，缺了 `--pi-desktop` 就会红（`beta/start/install-and-first-task.mdx` 等）。上游把子模块指针推进后，用 `git apply --3way` 重打，冲突按语义手工合并即可。
 
-## 安装：让 `trellis` 命令用上本 fork
+## 安装：`npm install -g @techd81/trellis@latest`
 
-> ⚠️ README 里那句 `npm install -g @mindfoldhq/trellis@latest` 装的是**上游 npm 包**，里面没有 `--pi-desktop`。想用本 fork 请走下面这条。
+本 fork 以 `@techd81/trellis` 的名义发布，装到的就是这份带 `--pi-desktop` 的代码；官方包 `@mindfoldhq/trellis` 不含它。
+
+不发布也能从源码装：
 
 ```powershell
 pwsh ./scripts/install-fork.ps1
 ```
 
-脚本顺序：`pnpm install` → PI-Desktop 靶向测试 → `pnpm build` → `pnpm pack`（把 `workspace:*` 重写成真实版本号）→ `npm i -g` 打出来的 tarball → 校验 `--pi-desktop` 存在。
+脚本顺序：`pnpm install` → PI-Desktop 靶向测试 → `pnpm build` → `pnpm pack`（把 `workspace:*` 重写成真实版本号）→ `npm i -g` → 校验 `--pi-desktop`。
 
-`@mindfoldhq/trellis-core` 由 npm 正常拉取，所以**不需要**先装官方包，也不需要往全局包里手工铺 `dist`。
+`@mindfoldhq/trellis-core` 始终从 npm 拉取，本 fork 只改 CLI 包。
 
 验证：
 
@@ -66,6 +68,20 @@ trellis pi-desktop --help
 ```powershell
 npm install -g @mindfoldhq/trellis --force
 ```
+
+### 发布（首次安装前，以及每次跟随上游之后）
+
+```powershell
+npm login                                   # 需要拥有 @techd81 作用域
+pnpm build
+cd packages/cli
+Copy-Item ../../README.md ../../LICENSE .
+npm publish --access public --ignore-scripts
+```
+
+- `--access public`：scoped 包默认私有，必须显式公开。
+- `--ignore-scripts`：`prepublishOnly` 会跑全量测试（Windows 上有 23 个既有环境失败）并用 `cp` 复制文件（cmd 下没有该命令），所以本地发布时跳过脚本。
+- 版本号跟上游保持一致：上游发 `0.6.18` → `sync-upstream.ps1` → 把 `packages/cli/package.json` 的 `version` 改成 `0.6.18` → 再 publish。这样 `trellis update` 的版本比较才有意义。
 
 ## 跟随上游更新
 
