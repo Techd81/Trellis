@@ -86,6 +86,7 @@ pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，
 - 脚本发布前会把 `@mindfoldhq/trellis-core: workspace:*` 临时钉成 `packages/core` 的真实版本号，发完自动还原。`npm publish` 不做这个重写，直接发会让所有人装不上（`EUNSUPPORTEDPROTOCOL`）。
 - 新版本发布后 `PUT` 返回 **202**，registry 要 3~6 分钟才看得到，这期间 `npm view` / `npm i` 会 404 —— 不是失败，等就行。
 - bypass-2FA 的 granular token 能发布，但**不能 unpublish**（403）。发废的版本只能去 npm 的包设置页 `Delete version` 手动删。
+- 仓库里**没有 CI 发布工作流**：上游那份 `publish.yml` 会以 `@mindfoldhq/trellis` 的名义上传，已删除。发布只走本地 `scripts/publish-fork.ps1`，凭据留在本机 `~/.npmrc`；CI（`.github/workflows/ci.yml`）只负责 typecheck / lint / 构建 / 测试。
 
 ## 跟随上游更新
 
