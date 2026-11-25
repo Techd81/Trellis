@@ -194,3 +194,7 @@ tmp1/
 
 # PI-Desktop writes its planning documents into the workspace root.
 /.pi/plan/
+
+# Copied into packages/cli right before an npm publish (see FORK.md).
+/packages/cli/README.md
+/packages/cli/LICENSE

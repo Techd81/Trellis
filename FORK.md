@@ -72,15 +72,15 @@ npm install -g @mindfoldhq/trellis --force
 ### 发布（首次安装前，以及每次跟随上游之后）
 
 ```powershell
-npm login                                   # 需要拥有 @techd81 作用域
-pnpm build
-cd packages/cli
-Copy-Item ../../README.md ../../LICENSE .
-npm publish --access public --ignore-scripts
+npm login                                # 需要拥有 @techd81 作用域
+pwsh ./scripts/publish-fork.ps1 -DryRun  # 只看清单，不上传
+pwsh ./scripts/publish-fork.ps1          # 真发布
 ```
 
+脚本会：校验在 `feat/pi-desktop` 且工作区干净 → `pnpm build` → 把根目录的 `README.md`/`LICENSE` 复制进 `packages/cli`（npm 只打包包目录里的文件）→ `npm publish --access public --ignore-scripts` → 回读 registry 版本。
+
 - `--access public`：scoped 包默认私有，必须显式公开。
-- `--ignore-scripts`：`prepublishOnly` 会跑全量测试（Windows 上有 23 个既有环境失败）并用 `cp` 复制文件（cmd 下没有该命令），所以本地发布时跳过脚本。
+- `--ignore-scripts`：`prepublishOnly` 会跑全量测试（Windows 上有 23 个既有环境失败）并用 `cp` 复制文件（cmd 下没有该命令），所以发布时跳过脚本。
 - 版本号跟上游保持一致：上游发 `0.6.18` → `sync-upstream.ps1` → 把 `packages/cli/package.json` 的 `version` 改成 `0.6.18` → 再 publish。这样 `trellis update` 的版本比较才有意义。
 
 ## 跟随上游更新
