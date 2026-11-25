@@ -16,7 +16,7 @@ function Install-TrellisCli {
     $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("trellis-fork-" + [guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
     try {
-        & pnpm --filter @techd81/trellis pack --pack-destination $stage
+        & pnpm --filter @awesome_dura/trellis pack --pack-destination $stage
         if ($LASTEXITCODE -ne 0) { throw "pnpm pack failed" }
         $tgz = Get-ChildItem $stage -Filter *.tgz | Select-Object -First 1
         if (-not $tgz) { throw "no tarball was produced" }

@@ -13,7 +13,7 @@
     Vendoring the build into an existing upstream package is not needed: the
     packed tarball pulls `@mindfoldhq/trellis-core` from npm itself.
 
-    Prefer `npm install -g @techd81/trellis@latest` once that package is
+    Prefer `npm install -g @awesome_dura/trellis@latest` once that package is
     published; this script is the build-from-source path.
 
 .PARAMETER SkipTests

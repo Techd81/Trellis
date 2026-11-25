@@ -1,6 +1,6 @@
 > **Private fork — `feat/pi-desktop`.** This branch ships [PI-Desktop](https://github.com/vastsa/PI-Desktop) as a
 > first-class platform: `trellis init --pi-desktop`, `trellis pi-desktop install|status|uninstall`.
-> Install it with `npm install -g @techd81/trellis@latest`, or build from source with
+> Install it with `npm install -g @awesome_dura/trellis@latest`, or build from source with
 > `pwsh ./scripts/install-fork.ps1`. [FORK.md](FORK.md) covers following upstream.
 
 <p align="center">
@@ -25,8 +25,8 @@
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@techd81/trellis"><img src="https://img.shields.io/npm/v/@techd81/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@techd81/trellis"><img src="https://img.shields.io/npm/dw/@techd81/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@awesome_dura/trellis"><img src="https://img.shields.io/npm/v/@awesome_dura/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@awesome_dura/trellis"><img src="https://img.shields.io/npm/dw/@awesome_dura/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.trytrellis.app/"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
@@ -60,7 +60,7 @@
 
 ```bash
 # 1. Install Trellis
-npm install -g @techd81/trellis@latest
+npm install -g @awesome_dura/trellis@latest
 
 # 2. Initialize in your repo
 trellis init -u your-name

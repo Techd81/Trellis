@@ -2,7 +2,7 @@
 #requires -Version 7.0
 <#
 .SYNOPSIS
-    Publish the built CLI to npm as @techd81/trellis.
+    Publish the built CLI to npm as @awesome_dura/trellis.
 
 .DESCRIPTION
     1. refuses to publish from a dirty tree or the wrong branch
@@ -58,7 +58,7 @@ try {
         $name = (Get-Content (Join-Path $packageDir "package.json") -Raw | ConvertFrom-Json).name
         $version = (Get-Content (Join-Path $packageDir "package.json") -Raw | ConvertFrom-Json).version
         Write-Host "    publishing $name@$version with tag '$Tag'"
-        if ($name -ne "@techd81/trellis") {
+        if ($name -ne "@awesome_dura/trellis") {
             throw "unexpected package name '$name' — this script publishes the fork only"
         }
     }
@@ -108,9 +108,9 @@ try {
     if (-not $DryRun) {
         Invoke-Step "Checking the registry" {
             $version = (Get-Content (Join-Path $packageDir "package.json") -Raw | ConvertFrom-Json).version
-            $latest = (& npm view "@techd81/trellis@$version" version 2>&1 | Out-String).Trim()
+            $latest = (& npm view "@awesome_dura/trellis@$version" version 2>&1 | Out-String).Trim()
             Write-Host "    registry now serves: $latest"
-            Write-Host "    install it: npm install -g @techd81/trellis@$Tag"
+            Write-Host "    install it: npm install -g @awesome_dura/trellis@$Tag"
         }
     }
 

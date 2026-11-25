@@ -41,9 +41,9 @@ git -C docs-site apply ../docs-site.pi-desktop.patch
 
 之所以必须打上：`registry-invariants` 会核对 `docs-site` 里的平台计数和 init flag 列表，缺了 `--pi-desktop` 就会红（`beta/start/install-and-first-task.mdx` 等）。上游把子模块指针推进后，用 `git apply --3way` 重打，冲突按语义手工合并即可。
 
-## 安装：`npm install -g @techd81/trellis@latest`
+## 安装：`npm install -g @awesome_dura/trellis@latest`
 
-本 fork 以 `@techd81/trellis` 的名义发布，装到的就是这份带 `--pi-desktop` 的代码；官方包 `@mindfoldhq/trellis` 不含它。
+本 fork 以 `@awesome_dura/trellis` 的名义发布，装到的就是这份带 `--pi-desktop` 的代码；官方包 `@mindfoldhq/trellis` 不含它。
 
 不发布也能从源码装：
 
@@ -72,7 +72,7 @@ npm install -g @mindfoldhq/trellis --force
 ### 发布（首次安装前，以及每次跟随上游之后）
 
 ```powershell
-npm login                                # 需要拥有 @techd81 作用域
+npm login                                # 需要拥有 @awesome_dura 作用域
 pwsh ./scripts/publish-fork.ps1 -DryRun  # 只看清单，不上传
 pwsh ./scripts/publish-fork.ps1          # 真发布
 ```
