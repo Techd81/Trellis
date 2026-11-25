@@ -6,8 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "trellis": "./bin/trellis.js",
-    "tl": "./bin/trellis.js"
+    "trellis": "bin/trellis.js",
+    "tl": "bin/trellis.js"
   },
   "publishConfig": {
     "access": "public"
@@ -85,6 +85,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Techd81/Trellis.git"
+    "url": "git+https://github.com/Techd81/Trellis.git"
   }
 }
