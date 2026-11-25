@@ -17,23 +17,17 @@
 
 <p align="center">
 <a href="./README.md">English</a> •
-<a href="https://docs.trytrellis.app/zh">文档</a> •
-<a href="https://docs.trytrellis.app/zh/start/install-and-first-task">快速开始</a> •
-<a href="https://docs.trytrellis.app/zh/advanced/multi-platform">支持平台</a> •
-<a href="https://docs.trytrellis.app/zh/start/real-world-scenarios">使用场景</a>
+<a href="#快速开始">快速开始</a> •
+<a href="#pi-desktop">PI-Desktop</a> •
+<a href="./FORK.md">构建与同步</a> •
+<a href="https://github.com/mindfold-ai/Trellis">上游</a>
 </p>
 
 <p align="center">
 <a href="https://www.npmjs.com/package/@awesome_dura/trellis"><img src="https://img.shields.io/npm/v/@awesome_dura/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
 <a href="https://www.npmjs.com/package/@awesome_dura/trellis"><img src="https://img.shields.io/npm/dw/@awesome_dura/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
-<a href="https://docs.trytrellis.app/zh"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
-<a href="https://discord.com/invite/tWcCZ3aRHc"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/issues"><img src="https://img.shields.io/github/issues/mindfold-ai/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/pulls"><img src="https://img.shields.io/github/issues-pr/mindfold-ai/Trellis?style=flat-square&color=9b59b6" alt="open PRs" /></a>
-<a href="https://deepwiki.com/mindfold-ai/Trellis"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue?style=flat-square" alt="Ask DeepWiki" /></a>
-<a href="https://chatgpt.com/?q=Explain+the+project+mindfold-ai/Trellis+on+GitHub"><img src="https://img.shields.io/badge/Ask-ChatGPT-74aa9c?style=flat-square&logo=openai&logoColor=white" alt="Ask ChatGPT" /></a>
+<a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
+<a href="https://github.com/mindfold-ai/Trellis"><img src="https://img.shields.io/badge/fork%20of-mindfold--ai%2FTrellis-6b7280.svg?style=flat-square" alt="fork of mindfold-ai/Trellis" /></a>
 </p>
 
 <p align="center">
@@ -68,7 +62,7 @@ trellis init -u your-name
 trellis init --cursor --opencode --codex -u your-name
 ```
 
-查看 [快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) 与 [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) 指南以了解详细配置步骤。
+详细的安装步骤见下方 [快速开始](#快速开始) 与 [PI-Desktop](#pi-desktop)；从源码构建与跟随上游见 [FORK.md](FORK.md)。
 
 ## PI-Desktop
 
@@ -115,11 +109,11 @@ Trellis 内部运行一个 4 阶段循环，skill 与子代理均由系统自动
 
 | 需求 | 链接 |
 | --- | --- |
-| 在仓库中安装 Trellis | [快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) |
-| 了解各平台之间的差异 | [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) |
-| 查看实际使用场景 | [真实场景](https://docs.trytrellis.app/zh/start/real-world-scenarios) |
-| 从 Spec 模板起步 | [Spec 模板](https://docs.trytrellis.app/zh/templates/specs-index) |
-| 跟进版本更新 | [更新日志](https://docs.trytrellis.app/zh/changelog) |
+| 在仓库中安装 Trellis | [快速开始](#快速开始) |
+| 安装 PI-Desktop 插件 | [`trellis pi-desktop install`](#pi-desktop) |
+| 从源码构建 / 跟随上游 | [FORK.md](FORK.md) |
+| 发布新版本 | [FORK.md](FORK.md) |
+| 平台适配的内部规范 | [platform-integration.md](.trellis/spec/cli/backend/platform-integration.md) |
 
 ## 常见问题
 
@@ -175,27 +169,12 @@ Trellis 管理的全部项目级表面。请新开一个 agent 会话进行对�
 
 </details>
 
-## Star 历史
+## 维护
 
-[![Star History Chart](https://star-history.dera.page/svg?repos=mindfold-ai/Trellis&type=Date)](https://star-history.dera.page/#mindfold-ai/Trellis&Date)
-
-## 社区与资源
-
-- [官方文档](https://docs.trytrellis.app/zh)
-- [GitHub Issues](https://github.com/mindfold-ai/Trellis/issues)
-- [Discord](https://discord.com/invite/tWcCZ3aRHc)
-- [技术博客](https://docs.trytrellis.app/zh/blog)
-
-### 联系我们
+本仓库在上游 Trellis 之上加了 PI-Desktop 适配。改了什么、怎么跟随上游、怎么发布，全部写在 [FORK.md](FORK.md)。
 
 <p align="center">
-<img src="assets/wx_link11.jpg" alt="微信群" width="260" />
-&nbsp;&nbsp;&nbsp;&nbsp;
-<img src="assets/feishu-group-qr.jpg" alt="飞书话题群" width="260" />
-</p>
-
-<p align="center">
-<a href="https://github.com/mindfold-ai/Trellis">官方仓库</a> •
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE">AGPL-3.0 License</a> •
-由 <a href="https://github.com/mindfold-ai">Mindfold</a> 构建
+<a href="https://github.com/mindfold-ai/Trellis">上游：mindfold-ai/Trellis</a> •
+<a href="./LICENSE">AGPL-3.0 License</a> •
+由 <a href="https://github.com/Techd81">Techd81</a> 维护
 </p>
