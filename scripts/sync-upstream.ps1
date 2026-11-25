@@ -187,7 +187,12 @@ try {
     Write-Host "==> Done" -ForegroundColor Green
     Write-Host ("    {0}" -f (Get-GitOutput log --oneline -1))
     Write-Host ("    {0}: {1}" -f $upstreamBranch, (Get-GitOutput log --oneline -1 $upstreamBranch))
-    if (-not $SkipInstall) { Write-Host ("    trellis --version: {0}" -f (& trellis --version)) }
+    if (-not $SkipInstall) {
+        $versionLine = @(& trellis --version 2>&1) |
+            Where-Object { $_ -match '^\d+\.\d+\.\d+' } |
+            Select-Object -Last 1
+        Write-Host ("    trellis --version: {0}" -f $versionLine)
+    }
 } finally {
     Pop-Location
 }
