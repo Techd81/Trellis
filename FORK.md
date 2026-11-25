@@ -82,7 +82,10 @@ pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，
 
 - `--access public`：scoped 包默认私有，必须显式公开。
 - `--ignore-scripts`：`prepublishOnly` 会跑全量测试（Windows 上有 23 个既有环境失败）并用 `cp` 复制文件（cmd 下没有该命令），所以发布时跳过脚本。
-- 版本号跟上游保持一致：上游发 `0.6.18` → `sync-upstream.ps1` → 把 `packages/cli/package.json` 的 `version` 改成 `0.6.18` → 再 publish。这样 `trellis update` 的版本比较才有意义。
+- 版本号默认跟上游保持一致；确实需要单独发版时按补丁位递增，并在这里记一笔。`0.6.18` 就是这么来的：`0.6.17` 已发布，但依赖写成了 `workspace:*` 装不上，而 npm 不允许重发同一版本。
+- 脚本发布前会把 `@mindfoldhq/trellis-core: workspace:*` 临时钉成 `packages/core` 的真实版本号，发完自动还原。`npm publish` 不做这个重写，直接发会让所有人装不上（`EUNSUPPORTEDPROTOCOL`）。
+- 新版本发布后 `PUT` 返回 **202**，registry 要 3~6 分钟才看得到，这期间 `npm view` / `npm i` 会 404 —— 不是失败，等就行。
+- bypass-2FA 的 granular token 能发布，但**不能 unpublish**（403）。发废的版本只能去 npm 的包设置页 `Delete version` 手动删。
 
 ## 跟随上游更新
 
