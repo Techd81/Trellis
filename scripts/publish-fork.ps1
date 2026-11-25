@@ -98,17 +98,34 @@ try {
         Write-Host "    README.md + LICENSE copied into packages/cli"
     }
 
-    Invoke-Step ($(if ($DryRun) { "Publishing (dry run)" } else { "Publishing to npm" })) {
-        Push-Location $packageDir
-        try {
-            $publishArgs = @("publish", "--access", "public", "--ignore-scripts", "--tag", $Tag)
+    $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("trellis-publish-" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $stage -Force | Out-Null
+    try {
+        # `npm publish` from the folder ships the raw manifest, and
+        # `@mindfoldhq/trellis-core` is declared as `workspace:*` there — npm
+        # cannot install that. `pnpm pack` rewrites it to the real version, so
+        # the tarball is what gets published.
+        Invoke-Step "Packing with pnpm (rewrites workspace:*)" {
+            & pnpm --filter "@awesome_dura/trellis" pack --pack-destination $stage
+            if ($LASTEXITCODE -ne 0) { throw "pnpm pack failed" }
+            $tarball = Get-ChildItem $stage -Filter *.tgz | Select-Object -First 1
+            if (-not $tarball) { throw "no tarball was produced" }
+            $manifest = (& tar -xOf $tarball.FullName package/package.json) -join "`n"
+            if ($manifest -match "workspace:") {
+                throw "the packed manifest still declares workspace: dependencies — npm cannot install that"
+            }
+            Write-Host ("    {0} ({1} kB), dependencies resolved" -f $tarball.Name, [math]::Round($tarball.Length / 1kb))
+        }
+
+        Invoke-Step ($(if ($DryRun) { "Publishing (dry run)" } else { "Publishing to npm" })) {
+            $publishArgs = @("publish", $tarball.FullName, "--access", "public", "--tag", $Tag)
             if ($DryRun) { $publishArgs += "--dry-run" }
             if ($Otp) { $publishArgs += "--otp=$Otp" }
             & npm @publishArgs
             if ($LASTEXITCODE -ne 0) { throw "npm publish failed (logged in as: $((& npm whoami 2>&1) -join ' '))" }
-        } finally {
-            Pop-Location
         }
+    } finally {
+        Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
     }
 
     if (-not $DryRun) {
