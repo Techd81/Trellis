@@ -26,7 +26,20 @@
 | 测试 | `test/commands/pi-desktop.test.ts`、`test/templates/pi-desktop.test.ts`、`test/templates/trellis.test.ts` | 46 条（30 + 16） |
 | 文档 | `README.md`、`README_CN.md`、`.trellis/spec/cli/backend/{platform-integration,commands-pi-desktop,index}.md` | 平台计数 22 → 23、适配说明 |
 
-`docs-site` 是子模块，文档改动不在本仓库：对应内容在 fork 的 `Techd81/docs` 分支 `docs/pi-desktop`（PR 已关闭，留给自用）。
+### `docs-site` 子模块怎么办
+
+`docs-site` 是独立仓库（`mindfold-ai/docs`），上游不会接受这份文档改动。所以：**子模块 HEAD 停在上游提交，改动以补丁形式留在工作区**，不提交。
+
+恢复或重新打补丁：
+
+```powershell
+git -C docs-site checkout -- .
+git -C docs-site apply ../docs-site.pi-desktop.patch
+```
+
+补丁的权威副本同时存在 fork 的 `Techd81/docs` 分支 `docs/pi-desktop` 上。
+
+之所以必须打上：`registry-invariants` 会核对 `docs-site` 里的平台计数和 init flag 列表，缺了 `--pi-desktop` 就会红（`beta/start/install-and-first-task.mdx` 等）。上游把子模块指针推进后，用 `git apply --3way` 重打，冲突按语义手工合并即可。
 
 ## 日常安装（让 `trellis` 命令用上本 fork）
 

@@ -118,6 +118,18 @@ try {
         }
     }
 
+    Invoke-Step "Checking the docs-site submodule" {
+        $recorded = (Get-GitOutput ls-tree HEAD docs-site).Split("`t")[0].Split(" ")[2]
+        $docsRepo = Join-Path $repo "docs-site"
+        $actual = ((& git -C $docsRepo rev-parse HEAD) | Out-String).Trim()
+        if ($actual -ne $recorded) {
+            Write-Host "    docs-site is at $($actual.Substring(0, 7)), the branch records $($recorded.Substring(0, 7))" -ForegroundColor Yellow
+            Write-Host "    re-apply the docs change: git -C docs-site apply ../docs-site.pi-desktop.patch"
+        } else {
+            Write-Host "    docs-site matches the recorded commit"
+        }
+    }
+
     Invoke-Step "Installing dependencies" {
         $lockMoved = @(& git -C $repo diff --name-only $script:previousUpstream $upstreamBranch -- pnpm-lock.yaml)
         if ($lockMoved -or -not (Test-Path (Join-Path $repo "node_modules"))) {

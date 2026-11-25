@@ -1,0 +1,664 @@
+diff --git a/advanced/custom-agents.mdx b/advanced/custom-agents.mdx
+index cf69119..25a68cc 100644
+--- a/advanced/custom-agents.mdx
++++ b/advanced/custom-agents.mdx
+@@ -7,8 +7,8 @@ title: 'Custom Sub-agents'
+ Trellis ships three sub-agents (`trellis-implement`, `trellis-check`, `trellis-research`). You can modify them or add your own. This chapter walks through the Claude Code format as the main example, then lists the frontmatter differences on other platforms.
+ 
+ <Note>
+-  Sub-agents ship on 18 of 22 configured platforms: Claude Code, Cursor, OpenCode, Codex, Kiro,
+-  Gemini CLI, Qoder, CodeBuddy, Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok
++  Sub-agents ship on 19 of 23 configured platforms: Claude Code, Cursor, OpenCode, Codex, Kiro,
++  Gemini CLI, Qoder, CodeBuddy, Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok
+   Build, Kimi Code, Snow CLI. The agent file format varies by platform (Markdown / TOML / JSON), and
+   on platforms without a `PreToolUse` hook or extension equivalent the sub-agents read their JSONL
+   manifest plus `prd.md`, `design.md` if present, and `implement.md` if present via a pull-based
+@@ -62,6 +62,7 @@ The file extension, frontmatter shape, and tool-declaration syntax differ per pl
+ | Copilot     | `.github/agents/{name}.agent.md` | CC-style `tools:` comma list                     | `Read, Write, Edit, Bash`                                          |
+ | Droid       | `.factory/droids/{name}.md`      | CC-style `tools:` comma list                     | `Read, Write, Edit, Bash`                                          |
+ | Pi Agent    | `.pi/agents/{name}.md`           | CC-style `tools:` comma list + extension context | `Read, Write, Edit, Bash`                                          |
++| PI-Desktop  | `.pi/agents/{name}.md`           | CC-style `tools:` comma list + extension context | `Read, Write, Edit, Bash`                                          |
+ 
+ ### Pi Agent model and thinking config
+ 
+diff --git a/advanced/custom-commands.mdx b/advanced/custom-commands.mdx
+index e82b0a8..b3fc563 100644
+--- a/advanced/custom-commands.mdx
++++ b/advanced/custom-commands.mdx
+@@ -8,7 +8,7 @@ Trellis ships a deliberately small set of slash commands. On agent-capable platf
+ 
+ ### Command File Format and Location
+ 
+-Trellis groups the 22 configured platforms into three delivery models:
++Trellis groups the 23 configured platforms into three delivery models:
+ 
+ **Explicit slash commands** — the user types `/trellis:<name>`; the platform injects the command file's content as a prompt.
+ 
+@@ -23,6 +23,7 @@ Trellis groups the 22 configured platforms into three delivery models:
+ | CodeBuddy   | `.codebuddy/commands/trellis/{name}.md`    | `/trellis:{name}`                  |
+ | Droid       | `.factory/commands/trellis/{name}.md`      | `/trellis:{name}`                  |
+ | Pi Agent    | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                  |
++| PI-Desktop  | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                  |
+ | Copilot     | `.github/prompts/trellis-{name}.prompt.md` | prompt-file picker                 |
+ 
+ Command files are Markdown; Gemini uses TOML (with a `prompt = """..."""` field).
+diff --git a/advanced/custom-skills.mdx b/advanced/custom-skills.mdx
+index 69a698e..dc8c5bc 100644
+--- a/advanced/custom-skills.mdx
++++ b/advanced/custom-skills.mdx
+@@ -47,7 +47,7 @@ Instructions the AI follows when this skill is triggered.
+ 3. Report the result in this format: ...
+ ```
+ 
+-Skills ship on all 22 configured platforms — the location differs per platform:
++Skills ship on all 23 configured platforms — the location differs per platform:
+ 
+ | Platform    | Location                                                                                               |
+ | ----------- | ------------------------------------------------------------------------------------------------------ |
+@@ -62,6 +62,7 @@ Skills ship on all 22 configured platforms — the location differs per platform
+ | Copilot     | `.github/skills/{name}/SKILL.md`                                                                       |
+ | Droid       | `.factory/skills/{name}/SKILL.md`                                                                      |
+ | Pi Agent    | `.agents/skills/{name}/SKILL.md` (Pi reads the shared layer)                                           |
++| PI-Desktop  | `.agents/skills/{name}/SKILL.md` (PI-Desktop reads the shared layer)                                   |
+ | Oh My Pi    | `.omp/skills/{name}/SKILL.md`                                                                          |
+ | Kilo        | `.kilocode/skills/{name}/SKILL.md`                                                                     |
+ | Antigravity | `.agent/skills/{name}/SKILL.md`                                                                        |
+diff --git a/advanced/multi-platform.mdx b/advanced/multi-platform.mdx
+index 94cd082..d2cadc9 100644
+--- a/advanced/multi-platform.mdx
++++ b/advanced/multi-platform.mdx
+@@ -4,7 +4,7 @@ title: 'Multi-Platform and Team Configuration'
+ 
+ ## Multi-Platform and Team Configuration
+ 
+-Trellis ships on 22 platforms (Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin (formerly Windsurf), Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, DeepSeek Harness) and additionally supports any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more). The `.trellis/` core is identical everywhere; what differs is **how hooks, extensions, skills, sub-agents, and commands are delivered** on each platform.
++Trellis ships on 23 platforms (Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin (formerly Windsurf), Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, DeepSeek Harness) and additionally supports any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more). The `.trellis/` core is identical everywhere; what differs is **how hooks, extensions, skills, sub-agents, and commands are delivered** on each platform.
+ 
+ ### Joining an Already-Initialized Trellis Project
+ 
+@@ -252,13 +252,31 @@ Layout:
+ 
+ The extension stores active task state under `.trellis/.runtime/sessions/<session-key>.json`, so each Pi window/session can work on its own task without taking over another window.
+ 
++### PI-Desktop
++
++```bash
++trellis init -u your-name --pi-desktop
++```
++
++PI-Desktop is extension-backed and reuses the Pi Agent surface. Trellis writes the same prompts, agents, and skills, then the host loads the plugin wrapper from `.pi-desktop/` and injects task context before `Bash` commands and sub-agent runs.
++
++Layout:
++
++- `.pi-desktop/trellis/manifest.json` + `.pi-desktop/trellis/main.js`: the plugin wrapper the host loads; `contributes.agentExtensions` registers `agent/index.ts`
++- `.pi-desktop/trellis/agent/index.ts`: session context, `Bash` `TRELLIS_CONTEXT_ID` propagation, and sub-agent JSONL injection
++- `.pi/prompts/trellis-{name}.md`: session-boundary prompts (`finish-work`, `continue`; `start` only where applicable) — the same files Pi Agent reads
++- `.pi/agents/{name}.md`: `trellis-implement`, `trellis-check`, `trellis-research` via host sub-agent discovery — the same files Pi Agent reads
++- `.agents/skills/trellis-{name}/SKILL.md`: the five Trellis workflow skills (shared layer) — the same files Pi Agent reads
++
++PI-Desktop ships no `settings.json` of its own: runtime behavior comes from the plugin at `.pi-desktop/trellis/agent/index.ts`. Sub-agents are dispatched through the host `Task` tool, and the shell tool is `Bash` (the shell behind it is user-configurable: PowerShell, cmd, git-bash, or bash). `trellis pi-desktop {install,status,uninstall}` manages the plugin, and global sub-agents go to `~/.agents/subagents`.
++
+ ### Oh My Pi
+ 
+ ```bash
+ trellis init -u your-name --omp
+ ```
+ 
+-Oh My Pi is extension-backed, like Pi Agent. Trellis writes the same workflow primitives, then the extension resolves the current session id and injects task context before Bash commands and sub-agent runs. Unlike Pi Agent, Oh My Pi has no `settings.json` — the native provider auto-discovers all subdirectories under `.omp/`.
++Oh My Pi is extension-backed, like Pi Agent. Trellis writes the same workflow primitives, then the extension resolves the current session id and injects task context before Bash commands and sub-agent runs. Unlike Pi Agent and PI-Desktop, Oh My Pi has no `settings.json` — the native provider auto-discovers all subdirectories under `.omp/`.
+ 
+ Layout:
+ 
+@@ -273,6 +291,7 @@ The extension stores active task state under `.trellis/.runtime/sessions/<sessio
+ 
+ Trellis also ships configurators for platforms not covered by the capability matrix:
+ 
++- **PI-Desktop** (`--pi-desktop`): extension-backed (see the section above); writes the `.pi-desktop/trellis/` plugin wrapper and reuses the Pi Agent prompt, agent, and skill files. `trellis pi-desktop {install,status,uninstall}` manages install, status, and uninstall.
+ - **Kilo** (`--kilo`): writes `.kilocode/workflows/` (commands: `start`, `finish-work`) and `.kilocode/skills/trellis-{name}/SKILL.md` (the trellis skills). No hook integration.
+ - **Antigravity** (`--antigravity`): writes Antigravity-native workflow files for the three commands.
+ - **Devin** (`--devin`, formerly Windsurf): writes Devin-native workflow and skill files. The old `--windsurf` flag still works as a deprecated alias.
+@@ -284,7 +303,7 @@ Trellis also ships configurators for platforms not covered by the capability mat
+ - **Snow CLI** (`--snow`): writes `.snow/skills/`, `.snow/commands/`, `.snow/agents/`, and `.snow/hooks/` (Python hooks emit `additionalContext` JSON for session / user / sub-agent events).
+ - **DeepSeek Harness** (`--dsh`): writes `.dsh/skills/` (user-invocable entry skills) plus the shared `.agents/skills/` layer; the agent loads skills by name through its skill-loader tool. No hook integration and no project-level sub-agent surface, so implement / check run inline in the main session.
+ 
+-Beyond the 22 configured platforms, Trellis can be consumed by any AI coding agent that follows the `.agents/skills/` convention (the [agentskills.io](https://agentskills.io) standard). Codex writes its skills there, and the files are directly usable by other agents in that ecosystem (Amp, Cline, Deep Agents, Firebender, Warp, and more). On those platforms you manage Trellis through the `.trellis/` core plus whatever prelude file the agent reads.
++Beyond the 23 configured platforms, Trellis can be consumed by any AI coding agent that follows the `.agents/skills/` convention (the [agentskills.io](https://agentskills.io) standard). Codex writes its skills there, and the files are directly usable by other agents in that ecosystem (Amp, Cline, Deep Agents, Firebender, Warp, and more). On those platforms you manage Trellis through the `.trellis/` core plus whatever prelude file the agent reads.
+ 
+ ### Operating Systems
+ 
+diff --git a/beta/advanced/custom-agents.mdx b/beta/advanced/custom-agents.mdx
+index e662e0f..571eeda 100644
+--- a/beta/advanced/custom-agents.mdx
++++ b/beta/advanced/custom-agents.mdx
+@@ -7,8 +7,8 @@ title: 'Custom Sub-agents'
+ Trellis ships three sub-agents (`trellis-implement`, `trellis-check`, `trellis-research`). You can modify them or add your own. This chapter walks through the Claude Code format as the main example, then lists the frontmatter differences on other platforms.
+ 
+ <Note>
+-  Sub-agents ship on 19 of 22 configured platforms: Claude Code, Cursor, OpenCode, Codex, Kiro,
+-  Gemini CLI, Qoder, CodeBuddy, Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok
++  Sub-agents ship on 20 of 23 configured platforms: Claude Code, Cursor, OpenCode, Codex, Kiro,
++  Gemini CLI, Qoder, CodeBuddy, Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok
+   Build, Kimi Code, Snow CLI, DeepSeek Harness. The agent file format varies by platform (Markdown /
+   TOML / JSON), and on platforms without a `PreToolUse` hook or extension equivalent the sub-agents
+   read their JSONL manifest plus `prd.md`, `design.md` if present, and `implement.md` if present via
+@@ -64,6 +64,7 @@ The file extension, frontmatter shape, and tool-declaration syntax differ per pl
+ | Copilot     | `.github/agents/{name}.agent.md` | CC-style `tools:` comma list                     | `Read, Write, Edit, Bash`                                          |
+ | Droid       | `.factory/droids/{name}.md`      | CC-style `tools:` comma list                     | `Read, Write, Edit, Bash`                                          |
+ | Pi Agent    | `.pi/agents/{name}.md`           | CC-style `tools:` comma list + extension context | `Read, Write, Edit, Bash`                                          |
++| PI-Desktop  | `.pi/agents/{name}.md`           | CC-style `tools:` comma list + extension context | `Read, Write, Edit, Bash`                                          |
+ 
+ ### Pi Agent model and thinking config
+ 
+diff --git a/beta/advanced/custom-commands.mdx b/beta/advanced/custom-commands.mdx
+index e82b0a8..b3fc563 100644
+--- a/beta/advanced/custom-commands.mdx
++++ b/beta/advanced/custom-commands.mdx
+@@ -8,7 +8,7 @@ Trellis ships a deliberately small set of slash commands. On agent-capable platf
+ 
+ ### Command File Format and Location
+ 
+-Trellis groups the 22 configured platforms into three delivery models:
++Trellis groups the 23 configured platforms into three delivery models:
+ 
+ **Explicit slash commands** — the user types `/trellis:<name>`; the platform injects the command file's content as a prompt.
+ 
+@@ -23,6 +23,7 @@ Trellis groups the 22 configured platforms into three delivery models:
+ | CodeBuddy   | `.codebuddy/commands/trellis/{name}.md`    | `/trellis:{name}`                  |
+ | Droid       | `.factory/commands/trellis/{name}.md`      | `/trellis:{name}`                  |
+ | Pi Agent    | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                  |
++| PI-Desktop  | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                  |
+ | Copilot     | `.github/prompts/trellis-{name}.prompt.md` | prompt-file picker                 |
+ 
+ Command files are Markdown; Gemini uses TOML (with a `prompt = """..."""` field).
+diff --git a/beta/advanced/custom-skills.mdx b/beta/advanced/custom-skills.mdx
+index 69a698e..dc8c5bc 100644
+--- a/beta/advanced/custom-skills.mdx
++++ b/beta/advanced/custom-skills.mdx
+@@ -47,7 +47,7 @@ Instructions the AI follows when this skill is triggered.
+ 3. Report the result in this format: ...
+ ```
+ 
+-Skills ship on all 22 configured platforms — the location differs per platform:
++Skills ship on all 23 configured platforms — the location differs per platform:
+ 
+ | Platform    | Location                                                                                               |
+ | ----------- | ------------------------------------------------------------------------------------------------------ |
+@@ -62,6 +62,7 @@ Skills ship on all 22 configured platforms — the location differs per platform
+ | Copilot     | `.github/skills/{name}/SKILL.md`                                                                       |
+ | Droid       | `.factory/skills/{name}/SKILL.md`                                                                      |
+ | Pi Agent    | `.agents/skills/{name}/SKILL.md` (Pi reads the shared layer)                                           |
++| PI-Desktop  | `.agents/skills/{name}/SKILL.md` (PI-Desktop reads the shared layer)                                   |
+ | Oh My Pi    | `.omp/skills/{name}/SKILL.md`                                                                          |
+ | Kilo        | `.kilocode/skills/{name}/SKILL.md`                                                                     |
+ | Antigravity | `.agent/skills/{name}/SKILL.md`                                                                        |
+diff --git a/beta/advanced/multi-platform.mdx b/beta/advanced/multi-platform.mdx
+index 082aa47..cc597f3 100644
+--- a/beta/advanced/multi-platform.mdx
++++ b/beta/advanced/multi-platform.mdx
+@@ -4,7 +4,7 @@ title: 'Multi-Platform and Team Configuration'
+ 
+ ## Multi-Platform and Team Configuration
+ 
+-Trellis ships on 22 platforms (Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin (formerly Windsurf), Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, DeepSeek Harness) and additionally supports any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more). The `.trellis/` core is identical everywhere; what differs is **how hooks, extensions, skills, sub-agents, and commands are delivered** on each platform.
++Trellis ships on 23 platforms (Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin (formerly Windsurf), Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, DeepSeek Harness) and additionally supports any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more). The `.trellis/` core is identical everywhere; what differs is **how hooks, extensions, skills, sub-agents, and commands are delivered** on each platform.
+ 
+ ### Joining an Already-Initialized Trellis Project
+ 
+@@ -258,13 +258,31 @@ Layout:
+ 
+ The extension stores active task state under `.trellis/.runtime/sessions/<session-key>.json`, so each Pi window/session can work on its own task without taking over another window.
+ 
++### PI-Desktop
++
++```bash
++trellis init -u your-name --pi-desktop
++```
++
++PI-Desktop is extension-backed and reuses the Pi Agent surface. Trellis writes the same prompts, agents, and skills, then the host loads the plugin wrapper from `.pi-desktop/` and injects task context before `Bash` commands and sub-agent runs.
++
++Layout:
++
++- `.pi-desktop/trellis/manifest.json` + `.pi-desktop/trellis/main.js`: the plugin wrapper the host loads; `contributes.agentExtensions` registers `agent/index.ts`
++- `.pi-desktop/trellis/agent/index.ts`: session context, `Bash` `TRELLIS_CONTEXT_ID` propagation, and sub-agent JSONL injection
++- `.pi/prompts/trellis-{name}.md`: session-boundary prompts (`finish-work`, `continue`; `start` only where applicable) — the same files Pi Agent reads
++- `.pi/agents/{name}.md`: `trellis-implement`, `trellis-check`, `trellis-research` via host sub-agent discovery — the same files Pi Agent reads
++- `.agents/skills/trellis-{name}/SKILL.md`: the five Trellis workflow skills (shared layer) — the same files Pi Agent reads
++
++PI-Desktop ships no `settings.json` of its own: runtime behavior comes from the plugin at `.pi-desktop/trellis/agent/index.ts`. Sub-agents are dispatched through the host `Task` tool, and the shell tool is `Bash` (the shell behind it is user-configurable: PowerShell, cmd, git-bash, or bash). `trellis pi-desktop {install,status,uninstall}` manages the plugin, and global sub-agents go to `~/.agents/subagents`.
++
+ ### Oh My Pi
+ 
+ ```bash
+ trellis init -u your-name --omp
+ ```
+ 
+-Oh My Pi is extension-backed, like Pi Agent. Trellis writes the same workflow primitives, then the extension resolves the current session id and injects task context before Bash commands and sub-agent runs. Unlike Pi Agent, Oh My Pi has no `settings.json` — the native provider auto-discovers all subdirectories under `.omp/`.
++Oh My Pi is extension-backed, like Pi Agent. Trellis writes the same workflow primitives, then the extension resolves the current session id and injects task context before Bash commands and sub-agent runs. Unlike Pi Agent and PI-Desktop, Oh My Pi has no `settings.json` — the native provider auto-discovers all subdirectories under `.omp/`.
+ 
+ Layout:
+ 
+@@ -279,6 +297,7 @@ The extension stores active task state under `.trellis/.runtime/sessions/<sessio
+ 
+ Trellis also ships configurators for platforms not covered by the capability matrix:
+ 
++- **PI-Desktop** (`--pi-desktop`): extension-backed (see the section above); writes the `.pi-desktop/trellis/` plugin wrapper and reuses the Pi Agent prompt, agent, and skill files. `trellis pi-desktop {install,status,uninstall}` manages install, status, and uninstall.
+ - **Kilo** (`--kilo`): writes `.kilocode/workflows/` (commands: `start`, `finish-work`) and `.kilocode/skills/trellis-{name}/SKILL.md` (the trellis skills). No hook integration.
+ - **Antigravity** (`--antigravity`): writes Antigravity-native workflow files for the three commands.
+ - **Devin** (`--devin`, formerly Windsurf): writes Devin-native workflow and skill files. The old `--windsurf` flag still works as a deprecated alias.
+@@ -294,7 +313,7 @@ Trellis also ships configurators for platforms not covered by the capability mat
+ 
+   Each `dsh --profile headless` invocation creates a fresh DSH session. Keep a task flow in one session or explicitly resume its returned session id; separate headless invocations do not share an active-task pointer automatically.
+ 
+-Beyond the 22 configured platforms, Trellis can be consumed by any AI coding agent that follows the `.agents/skills/` convention (the [agentskills.io](https://agentskills.io) standard). Codex writes its skills there, and the files are directly usable by other agents in that ecosystem (Amp, Cline, Deep Agents, Firebender, Warp, and more). On those platforms you manage Trellis through the `.trellis/` core plus whatever prelude file the agent reads.
++Beyond the 23 configured platforms, Trellis can be consumed by any AI coding agent that follows the `.agents/skills/` convention (the [agentskills.io](https://agentskills.io) standard). Codex writes its skills there, and the files are directly usable by other agents in that ecosystem (Amp, Cline, Deep Agents, Firebender, Warp, and more). On those platforms you manage Trellis through the `.trellis/` core plus whatever prelude file the agent reads.
+ 
+ ### Operating Systems
+ 
+diff --git a/beta/index.mdx b/beta/index.mdx
+index 331d034..db76f23 100644
+--- a/beta/index.mdx
++++ b/beta/index.mdx
+@@ -7,7 +7,7 @@ description: 'All-in-one AI framework & toolkit for 10+ AI coding platforms'
+ 
+ AI's capabilities grow like vines: full of vitality but spreading everywhere. Trellis is scaffolding for AI, guiding it along the path of your conventions.
+ 
+-Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, plus any agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more).
++Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, plus any agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more).
+ 
+ ### One-Line Summary
+ 
+@@ -25,7 +25,7 @@ Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CL
+ | Cross-session memory  | None                              | None                             | None                      | **Workspace journal persistence**                                                             |
+ | Workflow enforcement  | None                              | None                             | None                      | **Auto-trigger skills + check sub-agent verify loop**                                         |
+ | Team sharing          | Single user                       | Single user                      | Shareable but no standard | **Git-versioned Spec library**                                                                |
+-| Platform support      | Cursor only                       | Claude Code only                 | Per platform              | **22 configured platforms + shared skill ecosystem**                                          |
++| Platform support      | Cursor only                       | Claude Code only                 | Per platform              | **23 configured platforms + shared skill ecosystem**                                          |
+ 
+ ### Core Concepts at a Glance
+ 
+diff --git a/beta/start/install-and-first-task.mdx b/beta/start/install-and-first-task.mdx
+index 04a4202..9fe48dc 100644
+--- a/beta/start/install-and-first-task.mdx
++++ b/beta/start/install-and-first-task.mdx
+@@ -34,9 +34,9 @@ trellis init -u your-name --pi
+ 
+ `your-name` becomes your developer identity and creates your personal workspace at `.trellis/workspace/your-name/`.
+ 
+-Supported flags: `--claude`, `--cursor`, `--opencode`, `--codex`, `--kiro`, `--gemini`, `--qoder`, `--codebuddy`, `--copilot`, `--droid`, `--pi`, `--antigravity`, `--devin` (alias: `--windsurf`, deprecated), `--kilo`, `--reasonix`, `--zcode`, `--omp`, `--trae`, `--grok`, `--kimi`, `--snow`, `--dsh`.
++Supported flags: `--claude`, `--cursor`, `--opencode`, `--codex`, `--kiro`, `--gemini`, `--qoder`, `--codebuddy`, `--copilot`, `--droid`, `--pi`, `--pi-desktop`, `--antigravity`, `--devin` (alias: `--windsurf`, deprecated), `--kilo`, `--reasonix`, `--zcode`, `--omp`, `--trae`, `--grok`, `--kimi`, `--snow`, `--dsh`.
+ 
+-Beyond these 22 configured platforms, any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more) can also consume Trellis: Codex writes its skills there, and the files are directly usable by the rest of that ecosystem.
++Beyond these 23 configured platforms, any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more) can also consume Trellis: Codex writes its skills there, and the files are directly usable by the rest of that ecosystem.
+ 
+ ### Upgrading
+ 
+diff --git a/index.mdx b/index.mdx
+index 331d034..db76f23 100644
+--- a/index.mdx
++++ b/index.mdx
+@@ -7,7 +7,7 @@ description: 'All-in-one AI framework & toolkit for 10+ AI coding platforms'
+ 
+ AI's capabilities grow like vines: full of vitality but spreading everywhere. Trellis is scaffolding for AI, guiding it along the path of your conventions.
+ 
+-Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, plus any agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more).
++Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Droid, Pi Agent, PI-Desktop, Oh My Pi, Reasonix, ZCode, Trae, Grok Build, Kimi Code, Snow CLI, plus any agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more).
+ 
+ ### One-Line Summary
+ 
+@@ -25,7 +25,7 @@ Supported platforms: Claude Code, Cursor, OpenCode, Codex, Kiro, Kilo, Gemini CL
+ | Cross-session memory  | None                              | None                             | None                      | **Workspace journal persistence**                                                             |
+ | Workflow enforcement  | None                              | None                             | None                      | **Auto-trigger skills + check sub-agent verify loop**                                         |
+ | Team sharing          | Single user                       | Single user                      | Shareable but no standard | **Git-versioned Spec library**                                                                |
+-| Platform support      | Cursor only                       | Claude Code only                 | Per platform              | **22 configured platforms + shared skill ecosystem**                                          |
++| Platform support      | Cursor only                       | Claude Code only                 | Per platform              | **23 configured platforms + shared skill ecosystem**                                          |
+ 
+ ### Core Concepts at a Glance
+ 
+diff --git a/start/install-and-first-task.mdx b/start/install-and-first-task.mdx
+index 590ee01..44a4809 100644
+--- a/start/install-and-first-task.mdx
++++ b/start/install-and-first-task.mdx
+@@ -34,9 +34,9 @@ trellis init -u your-name --pi
+ 
+ `your-name` becomes your developer identity and creates your personal workspace at `.trellis/workspace/your-name/`.
+ 
+-Supported flags: `--claude`, `--cursor`, `--opencode`, `--codex`, `--kiro`, `--gemini`, `--qoder`, `--codebuddy`, `--copilot`, `--droid`, `--pi`, `--antigravity`, `--devin` (alias: `--windsurf`, deprecated), `--kilo`, `--reasonix`, `--zcode`, `--omp`, `--trae`, `--grok`, `--kimi`, `--snow`, `--dsh`.
++Supported flags: `--claude`, `--cursor`, `--opencode`, `--codex`, `--kiro`, `--gemini`, `--qoder`, `--codebuddy`, `--copilot`, `--droid`, `--pi`, `--pi-desktop`, `--antigravity`, `--devin` (alias: `--windsurf`, deprecated), `--kilo`, `--reasonix`, `--zcode`, `--omp`, `--trae`, `--grok`, `--kimi`, `--snow`, `--dsh`.
+ 
+-Beyond these 22 configured platforms, any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more) can also consume Trellis: Codex writes its skills there, and the files are directly usable by the rest of that ecosystem.
++Beyond these 23 configured platforms, any AI coding agent that reads the `.agents/skills/` standard (Amp, Cline, Deep Agents, Firebender, Warp, and more) can also consume Trellis: Codex writes its skills there, and the files are directly usable by the rest of that ecosystem.
+ 
+ ### Upgrading
+ 
+diff --git a/zh/advanced/custom-agents.mdx b/zh/advanced/custom-agents.mdx
+index f23f687..a7ae31a 100644
+--- a/zh/advanced/custom-agents.mdx
++++ b/zh/advanced/custom-agents.mdx
+@@ -7,8 +7,8 @@ title: '定制 Sub-agent'
+ Trellis 原生带有 3 个 sub-agent（`trellis-implement`、`trellis-check`、`trellis-research`）。你可以修改它们或新增自己的。本章以 Claude Code 格式作为主要例子，再列出其他平台的 frontmatter 差异。
+ 
+ <Note>
+-  Sub-agent 在 22 个配置平台里有 18 个可用：Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini
+-  CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、
++  Sub-agent 在 23 个配置平台里有 19 个可用：Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini
++  CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、
+   Kimi Code、Snow CLI。agent 文件格式按平台分 Markdown / TOML / JSON；没有 sub-agent `PreToolUse`
+   hook 或 extension 等价机制的平台，sub-agent 自己通过 pull-based prelude 读取自己的 JSONL
+   manifest、`prd.md`、存在时的 `design.md`、存在时的 `implement.md`，不靠 hook 注入。Codex 也可以跑
+@@ -60,6 +60,7 @@ Claude Code 上的关键 frontmatter 字段：
+ | Copilot     | `.github/agents/{name}.agent.md` | CC 风格 `tools:` 逗号列表                    | `Read, Write, Edit, Bash`                                          |
+ | Droid       | `.factory/droids/{name}.md`      | CC 风格 `tools:` 逗号列表                    | `Read, Write, Edit, Bash`                                          |
+ | Pi Agent    | `.pi/agents/{name}.md`           | CC 风格 `tools:` 逗号列表 + extension 上下文 | `Read, Write, Edit, Bash`                                          |
++| PI-Desktop  | `.pi/agents/{name}.md`           | CC 风格 `tools:` 逗号列表 + extension 上下文 | `Read, Write, Edit, Bash`                                          |
+ 
+ ### Pi Agent 的 model 和 thinking 配置
+ 
+diff --git a/zh/advanced/custom-commands.mdx b/zh/advanced/custom-commands.mdx
+index 994a04e..95076d8 100644
+--- a/zh/advanced/custom-commands.mdx
++++ b/zh/advanced/custom-commands.mdx
+@@ -8,7 +8,7 @@ Trellis 原生带的 slash 命令留得很少。Agent-capable 平台（Claude Co
+ 
+ ### 命令文件格式和位置
+ 
+-22 个平台按交付形态分三组：
++23 个平台按交付形态分三组：
+ 
+ **显式 slash 命令**——用户输入 `/trellis:<name>`，平台把命令文件内容注入为 prompt。
+ 
+@@ -23,6 +23,7 @@ Trellis 原生带的 slash 命令留得很少。Agent-capable 平台（Claude Co
+ | CodeBuddy   | `.codebuddy/commands/trellis/{name}.md`    | `/trellis:{name}`                 |
+ | Droid       | `.factory/commands/trellis/{name}.md`      | `/trellis:{name}`                 |
+ | Pi Agent    | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                 |
++| PI-Desktop  | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                 |
+ | Copilot     | `.github/prompts/trellis-{name}.prompt.md` | prompt 文件选择器                 |
+ 
+ 命令文件是 Markdown；Gemini 用 TOML（`prompt = """..."""` 字段）。
+diff --git a/zh/advanced/custom-skills.mdx b/zh/advanced/custom-skills.mdx
+index 484bb14..c537e2a 100644
+--- a/zh/advanced/custom-skills.mdx
++++ b/zh/advanced/custom-skills.mdx
+@@ -47,7 +47,7 @@ skill 被触发时 AI 要遵循的指令。
+ 3. 按以下格式汇报结果：...
+ ```
+ 
+-Skill 在全部 22 个配置平台上都可用，位置按平台不同：
++Skill 在全部 23 个配置平台上都可用，位置按平台不同：
+ 
+ | 平台        | 位置                                                                                          |
+ | ----------- | --------------------------------------------------------------------------------------------- |
+@@ -62,6 +62,7 @@ Skill 在全部 22 个配置平台上都可用，位置按平台不同：
+ | Copilot     | `.github/skills/{name}/SKILL.md`                                                              |
+ | Droid       | `.factory/skills/{name}/SKILL.md`                                                             |
+ | Pi Agent    | `.agents/skills/{name}/SKILL.md`（Pi 读共享层）                                               |
++| PI-Desktop  | `.agents/skills/{name}/SKILL.md`（PI-Desktop 读共享层）                                       |
+ | Oh My Pi    | `.omp/skills/{name}/SKILL.md`                                                                 |
+ | Kilo        | `.kilocode/skills/{name}/SKILL.md`                                                            |
+ | Antigravity | `.agent/skills/{name}/SKILL.md`                                                               |
+diff --git a/zh/advanced/multi-platform.mdx b/zh/advanced/multi-platform.mdx
+index a6e2297..8ab50c9 100644
+--- a/zh/advanced/multi-platform.mdx
++++ b/zh/advanced/multi-platform.mdx
+@@ -4,7 +4,7 @@ title: '多平台与团队配置'
+ 
+ ## 多平台与团队配置
+ 
+-Trellis 支持 22 个平台（Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin（原 Windsurf）、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI、DeepSeek Harness），以及任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。`.trellis/` 核心跨平台一致；差异在于**各平台如何交付 hook、extension、skill、sub-agent、command**。
++Trellis 支持 23 个平台（Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin（原 Windsurf）、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI、DeepSeek Harness），以及任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。`.trellis/` 核心跨平台一致；差异在于**各平台如何交付 hook、extension、skill、sub-agent、command**。
+ 
+ ### 加入已初始化的 Trellis 项目
+ 
+@@ -244,13 +244,31 @@ Pi Agent 走 extension，不走 Python hook。Trellis 写入同样的 workflow 
+ 
+ extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.json`，所以每个 Pi 窗口/会话都可以有自己的任务，不会抢别的窗口。
+ 
++### PI-Desktop
++
++```bash
++trellis init -u your-name --pi-desktop
++```
++
++PI-Desktop 与 Pi Agent 一样走 extension，并复用 Pi Agent 的文件面。Trellis 写入同样的 prompt、agent 和 skill，然后宿主从 `.pi-desktop/` 加载 plugin wrapper，在 `Bash` 命令和 sub-agent 运行前注入任务上下文。
++
++布局：
++
++- `.pi-desktop/trellis/manifest.json` + `.pi-desktop/trellis/main.js`：宿主加载的 plugin wrapper，`contributes.agentExtensions` 注册 `agent/index.ts`
++- `.pi-desktop/trellis/agent/index.ts`：会话上下文、`Bash` `TRELLIS_CONTEXT_ID` 传递、sub-agent JSONL 注入
++- `.pi/prompts/trellis-{name}.md`：会话边界 prompt（`finish-work`、`continue`；`start` 只在需要手动入口的平台存在）——与 Pi Agent 读的是同一批文件
++- `.pi/agents/{name}.md`：`trellis-implement`、`trellis-check`、`trellis-research`，由宿主发现 sub-agent——与 Pi Agent 读的是同一批文件
++- `.agents/skills/trellis-{name}/SKILL.md`：5 个 Trellis 工作流 skill（共享层）——与 Pi Agent 读的是同一批文件
++
++PI-Desktop 没有自己的 `settings.json`：运行时行为来自 `.pi-desktop/trellis/agent/index.ts` 这个插件。sub-agent 通过宿主的 `Task` 工具派发，shell 工具名是 `Bash`（底层 shell 可由用户配置：PowerShell、cmd、git-bash 或 bash）。插件的安装 / 查看状态 / 卸载由 `trellis pi-desktop {install,status,uninstall}` 管理，全局 sub-agent 写到 `~/.agents/subagents`。
++
+ ### Oh My Pi
+ 
+ ```bash
+ trellis init -u your-name --omp
+ ```
+ 
+-Oh My Pi 与 Pi Agent 一样走 extension。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。与 Pi Agent 不同，Oh My Pi 没有 `settings.json` —— 原生 provider 会自动发现 `.omp/` 下的所有子目录。
++Oh My Pi 与 Pi Agent 一样走 extension。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。与 Pi Agent 和 PI-Desktop 不同，Oh My Pi 没有 `settings.json` —— 原生 provider 会自动发现 `.omp/` 下的所有子目录。
+ 
+ 布局：
+ 
+@@ -265,6 +283,7 @@ extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.
+ 
+ Trellis 还原生带有上面能力矩阵之外几个平台的配置器：
+ 
++- **PI-Desktop**（`--pi-desktop`）：走 extension（见上一节）；写 `.pi-desktop/trellis/` 的 plugin wrapper，复用 Pi Agent 的 prompt、agent 和 skill 文件。安装、查看状态、卸载由 `trellis pi-desktop {install,status,uninstall}` 管理。
+ - **Kilo**（`--kilo`）：写 `.kilocode/workflows/`（命令：`start`、`finish-work`）和 `.kilocode/skills/trellis-{name}/SKILL.md`（trellis skill）。没有 hook 集成。
+ - **Antigravity**（`--antigravity`）：写 Antigravity 原生的 workflow 文件（3 个命令）。
+ - **Devin**（`--devin`，原 Windsurf）：写 Devin 原生的 workflow 和 skill 文件。旧的 `--windsurf` flag 仍作为已废弃的别名可用。
+@@ -276,7 +295,7 @@ Trellis 还原生带有上面能力矩阵之外几个平台的配置器：
+ - **Snow CLI**（`--snow`）：写 `.snow/skills/`、`.snow/commands/`、`.snow/agents/`、`.snow/hooks/`（Python hook 为 session / user / sub-agent 事件输出 `additionalContext` JSON）。
+ - **DeepSeek Harness**（`--dsh`）：写入 `.dsh/skills/`（用户可调用的入口 skill）以及共享的 `.agents/skills/` 层；agent 通过 skill-loader 工具按名字加载 skill。无 hook 集成，也没有项目级 sub-agent 定义面，因此 implement / check 阶段在主会话内联执行。
+ 
+-除了 22 个已配置平台，Trellis 还能被任何遵循 `.agents/skills/` 约定（[agentskills.io](https://agentskills.io) 规范）的 AI 编码 agent 直接使用。Codex 的 skill 就写在这个目录下，这些文件也能被该生态的其他 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）直接读取。这些平台上你通过 `.trellis/` 核心加上各自 agent 读取的 prelude 文件来管理 Trellis。
++除了 23 个已配置平台，Trellis 还能被任何遵循 `.agents/skills/` 约定（[agentskills.io](https://agentskills.io) 规范）的 AI 编码 agent 直接使用。Codex 的 skill 就写在这个目录下，这些文件也能被该生态的其他 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）直接读取。这些平台上你通过 `.trellis/` 核心加上各自 agent 读取的 prelude 文件来管理 Trellis。
+ 
+ ### 操作系统
+ 
+diff --git a/zh/beta/advanced/custom-agents.mdx b/zh/beta/advanced/custom-agents.mdx
+index e3dc368..1819e08 100644
+--- a/zh/beta/advanced/custom-agents.mdx
++++ b/zh/beta/advanced/custom-agents.mdx
+@@ -7,8 +7,8 @@ title: '定制 Sub-agent'
+ Trellis 原生带有 3 个 sub-agent（`trellis-implement`、`trellis-check`、`trellis-research`）。你可以修改它们或新增自己的。本章以 Claude Code 格式作为主要例子，再列出其他平台的 frontmatter 差异。
+ 
+ <Note>
+-  Sub-agent 在 22 个配置平台里有 19 个可用：Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini
+-  CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、
++  Sub-agent 在 23 个配置平台里有 20 个可用：Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini
++  CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、
+   Kimi Code、Snow CLI、DeepSeek Harness。agent 文件格式按平台分 Markdown / TOML / JSON；没有
+   sub-agent `PreToolUse` hook 或 extension 等价机制的平台，sub-agent 自己通过 pull-based prelude
+   读取自己的 JSONL manifest、`prd.md`、存在时的 `design.md`、存在时的 `implement.md`，不靠 hook
+@@ -63,6 +63,7 @@ Claude Code 上的关键 frontmatter 字段：
+ | Copilot     | `.github/agents/{name}.agent.md` | CC 风格 `tools:` 逗号列表                    | `Read, Write, Edit, Bash`                                          |
+ | Droid       | `.factory/droids/{name}.md`      | CC 风格 `tools:` 逗号列表                    | `Read, Write, Edit, Bash`                                          |
+ | Pi Agent    | `.pi/agents/{name}.md`           | CC 风格 `tools:` 逗号列表 + extension 上下文 | `Read, Write, Edit, Bash`                                          |
++| PI-Desktop  | `.pi/agents/{name}.md`           | CC 风格 `tools:` 逗号列表 + extension 上下文 | `Read, Write, Edit, Bash`                                          |
+ 
+ ### Pi Agent 的 model 和 thinking 配置
+ 
+diff --git a/zh/beta/advanced/custom-commands.mdx b/zh/beta/advanced/custom-commands.mdx
+index 994a04e..95076d8 100644
+--- a/zh/beta/advanced/custom-commands.mdx
++++ b/zh/beta/advanced/custom-commands.mdx
+@@ -8,7 +8,7 @@ Trellis 原生带的 slash 命令留得很少。Agent-capable 平台（Claude Co
+ 
+ ### 命令文件格式和位置
+ 
+-22 个平台按交付形态分三组：
++23 个平台按交付形态分三组：
+ 
+ **显式 slash 命令**——用户输入 `/trellis:<name>`，平台把命令文件内容注入为 prompt。
+ 
+@@ -23,6 +23,7 @@ Trellis 原生带的 slash 命令留得很少。Agent-capable 平台（Claude Co
+ | CodeBuddy   | `.codebuddy/commands/trellis/{name}.md`    | `/trellis:{name}`                 |
+ | Droid       | `.factory/commands/trellis/{name}.md`      | `/trellis:{name}`                 |
+ | Pi Agent    | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                 |
++| PI-Desktop  | `.pi/prompts/trellis-{name}.md`            | `/trellis-{name}`                 |
+ | Copilot     | `.github/prompts/trellis-{name}.prompt.md` | prompt 文件选择器                 |
+ 
+ 命令文件是 Markdown；Gemini 用 TOML（`prompt = """..."""` 字段）。
+diff --git a/zh/beta/advanced/custom-skills.mdx b/zh/beta/advanced/custom-skills.mdx
+index 484bb14..c537e2a 100644
+--- a/zh/beta/advanced/custom-skills.mdx
++++ b/zh/beta/advanced/custom-skills.mdx
+@@ -47,7 +47,7 @@ skill 被触发时 AI 要遵循的指令。
+ 3. 按以下格式汇报结果：...
+ ```
+ 
+-Skill 在全部 22 个配置平台上都可用，位置按平台不同：
++Skill 在全部 23 个配置平台上都可用，位置按平台不同：
+ 
+ | 平台        | 位置                                                                                          |
+ | ----------- | --------------------------------------------------------------------------------------------- |
+@@ -62,6 +62,7 @@ Skill 在全部 22 个配置平台上都可用，位置按平台不同：
+ | Copilot     | `.github/skills/{name}/SKILL.md`                                                              |
+ | Droid       | `.factory/skills/{name}/SKILL.md`                                                             |
+ | Pi Agent    | `.agents/skills/{name}/SKILL.md`（Pi 读共享层）                                               |
++| PI-Desktop  | `.agents/skills/{name}/SKILL.md`（PI-Desktop 读共享层）                                       |
+ | Oh My Pi    | `.omp/skills/{name}/SKILL.md`                                                                 |
+ | Kilo        | `.kilocode/skills/{name}/SKILL.md`                                                            |
+ | Antigravity | `.agent/skills/{name}/SKILL.md`                                                               |
+diff --git a/zh/beta/advanced/multi-platform.mdx b/zh/beta/advanced/multi-platform.mdx
+index 0439e82..af63ef0 100644
+--- a/zh/beta/advanced/multi-platform.mdx
++++ b/zh/beta/advanced/multi-platform.mdx
+@@ -4,7 +4,7 @@ title: '多平台与团队配置'
+ 
+ ## 多平台与团队配置
+ 
+-Trellis 支持 22 个平台（Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin（原 Windsurf）、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI、DeepSeek Harness），以及任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。`.trellis/` 核心跨平台一致；差异在于**各平台如何交付 hook、extension、skill、sub-agent、command**。
++Trellis 支持 23 个平台（Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin（原 Windsurf）、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI、DeepSeek Harness），以及任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。`.trellis/` 核心跨平台一致；差异在于**各平台如何交付 hook、extension、skill、sub-agent、command**。
+ 
+ ### 加入已初始化的 Trellis 项目
+ 
+@@ -250,13 +250,31 @@ Pi Agent 走 extension，不走 Python hook。Trellis 写入同样的 workflow 
+ 
+ extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.json`，所以每个 Pi 窗口/会话都可以有自己的任务，不会抢别的窗口。
+ 
++### PI-Desktop
++
++```bash
++trellis init -u your-name --pi-desktop
++```
++
++PI-Desktop 与 Pi Agent 一样走 extension，并复用 Pi Agent 的文件面。Trellis 写入同样的 prompt、agent 和 skill，然后宿主从 `.pi-desktop/` 加载 plugin wrapper，在 `Bash` 命令和 sub-agent 运行前注入任务上下文。
++
++布局：
++
++- `.pi-desktop/trellis/manifest.json` + `.pi-desktop/trellis/main.js`：宿主加载的 plugin wrapper，`contributes.agentExtensions` 注册 `agent/index.ts`
++- `.pi-desktop/trellis/agent/index.ts`：会话上下文、`Bash` `TRELLIS_CONTEXT_ID` 传递、sub-agent JSONL 注入
++- `.pi/prompts/trellis-{name}.md`：会话边界 prompt（`finish-work`、`continue`；`start` 只在需要手动入口的平台存在）——与 Pi Agent 读的是同一批文件
++- `.pi/agents/{name}.md`：`trellis-implement`、`trellis-check`、`trellis-research`，由宿主发现 sub-agent——与 Pi Agent 读的是同一批文件
++- `.agents/skills/trellis-{name}/SKILL.md`：5 个 Trellis 工作流 skill（共享层）——与 Pi Agent 读的是同一批文件
++
++PI-Desktop 没有自己的 `settings.json`：运行时行为来自 `.pi-desktop/trellis/agent/index.ts` 这个插件。sub-agent 通过宿主的 `Task` 工具派发，shell 工具名是 `Bash`（底层 shell 可由用户配置：PowerShell、cmd、git-bash 或 bash）。插件的安装 / 查看状态 / 卸载由 `trellis pi-desktop {install,status,uninstall}` 管理，全局 sub-agent 写到 `~/.agents/subagents`。
++
+ ### Oh My Pi
+ 
+ ```bash
+ trellis init -u your-name --omp
+ ```
+ 
+-Oh My Pi 与 Pi Agent 一样走 extension。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。与 Pi Agent 不同，Oh My Pi 没有 `settings.json` —— 原生 provider 会自动发现 `.omp/` 下的所有子目录。
++Oh My Pi 与 Pi Agent 一样走 extension。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。与 Pi Agent 和 PI-Desktop 不同，Oh My Pi 没有 `settings.json` —— 原生 provider 会自动发现 `.omp/` 下的所有子目录。
+ 
+ 布局：
+ 
+@@ -271,6 +289,7 @@ extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.
+ 
+ Trellis 还原生带有上面能力矩阵之外几个平台的配置器：
+ 
++- **PI-Desktop**（`--pi-desktop`）：走 extension（见上一节）；写 `.pi-desktop/trellis/` 的 plugin wrapper，复用 Pi Agent 的 prompt、agent 和 skill 文件。安装、查看状态、卸载由 `trellis pi-desktop {install,status,uninstall}` 管理。
+ - **Kilo**（`--kilo`）：写 `.kilocode/workflows/`（命令：`start`、`finish-work`）和 `.kilocode/skills/trellis-{name}/SKILL.md`（trellis skill）。没有 hook 集成。
+ - **Antigravity**（`--antigravity`）：写 Antigravity 原生的 workflow 文件（3 个命令）。
+ - **Devin**（`--devin`，原 Windsurf）：写 Devin 原生的 workflow 和 skill 文件。旧的 `--windsurf` flag 仍作为已废弃的别名可用。
+@@ -286,7 +305,7 @@ Trellis 还原生带有上面能力矩阵之外几个平台的配置器：
+ 
+   每次 `dsh --profile headless` 调用都会创建新的 DSH 会话。请在同一会话中完成任务流程，或显式续接返回的 session id；多个独立 headless 调用不会自动共享 active-task 指针。
+ 
+-除了 22 个已配置平台，Trellis 还能被任何遵循 `.agents/skills/` 约定（[agentskills.io](https://agentskills.io) 规范）的 AI 编码 agent 直接使用。Codex 的 skill 就写在这个目录下，这些文件也能被该生态的其他 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）直接读取。这些平台上你通过 `.trellis/` 核心加上各自 agent 读取的 prelude 文件来管理 Trellis。
++除了 23 个已配置平台，Trellis 还能被任何遵循 `.agents/skills/` 约定（[agentskills.io](https://agentskills.io) 规范）的 AI 编码 agent 直接使用。Codex 的 skill 就写在这个目录下，这些文件也能被该生态的其他 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）直接读取。这些平台上你通过 `.trellis/` 核心加上各自 agent 读取的 prelude 文件来管理 Trellis。
+ 
+ ### 操作系统
+ 
+diff --git a/zh/beta/index.mdx b/zh/beta/index.mdx
+index 9a0dfe4..1afceb4 100644
+--- a/zh/beta/index.mdx
++++ b/zh/beta/index.mdx
+@@ -7,7 +7,7 @@ description: '面向 10+ AI coding 平台的一站式 AI 框架和工具集'
+ 
+ AI 的能力像藤蔓一样生长，充满活力但四处蔓延。Trellis 是 AI 的脚手架，引导它沿着规范的路径前进。
+ 
+-支持平台：Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI，以及任何读取 `.agents/skills/` 规范的 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。
++支持平台：Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI，以及任何读取 `.agents/skills/` 规范的 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。
+ 
+ ### 一句话定位
+ 
+@@ -25,7 +25,7 @@ AI 的能力像藤蔓一样生长，充满活力但四处蔓延。Trellis 是 AI
+ | 跨会话记忆   | 无               | 无                   | 无              | **workspace journal 持久化**                                                |
+ | 工作流固化   | 无               | 无                   | 无              | **Auto-trigger skill + check sub-agent 验证循环**                           |
+ | 团队共享     | 单人             | 单人                 | 可分享但无标准  | **Git 版本化 Spec 库**                                                      |
+-| 支持平台     | Cursor 专属      | Claude Code 专属     | 按平台          | **22 个已配置平台 + 共享 skill 生态**                                       |
++| 支持平台     | Cursor 专属      | Claude Code 专属     | 按平台          | **23 个已配置平台 + 共享 skill 生态**                                       |
+ 
+ ### 核心概念速览
+ 
+diff --git a/zh/beta/start/install-and-first-task.mdx b/zh/beta/start/install-and-first-task.mdx
+index 7b4f4ee..b41325a 100644
+--- a/zh/beta/start/install-and-first-task.mdx
++++ b/zh/beta/start/install-and-first-task.mdx
+@@ -31,9 +31,9 @@ trellis init -u your-name --pi
+ 
+ `your-name` 会成为你的开发者身份，在 `.trellis/workspace/your-name/` 创建个人工作区。
+ 
+-支持的 flag：`--claude`、`--cursor`、`--opencode`、`--codex`、`--kiro`、`--gemini`、`--qoder`、`--codebuddy`、`--copilot`、`--droid`、`--pi`、`--antigravity`、`--devin`（别名：`--windsurf`，已废弃）、`--kilo`、`--reasonix`、`--zcode`、`--omp`、`--trae`、`--grok`、`--kimi`、`--snow`、`--dsh`。
++支持的 flag：`--claude`、`--cursor`、`--opencode`、`--codex`、`--kiro`、`--gemini`、`--qoder`、`--codebuddy`、`--copilot`、`--droid`、`--pi`、`--pi-desktop`、`--antigravity`、`--devin`（别名：`--windsurf`，已废弃）、`--kilo`、`--reasonix`、`--zcode`、`--omp`、`--trae`、`--grok`、`--kimi`、`--snow`、`--dsh`。
+ 
+-除了这 22 个已配置平台，任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）也能直接消费 Trellis：Codex 的 skill 就写在这个目录下，这些文件能被该生态的其他 agent 直接读取。
++除了这 23 个已配置平台，任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）也能直接消费 Trellis：Codex 的 skill 就写在这个目录下，这些文件能被该生态的其他 agent 直接读取。
+ 
+ ### 升级
+ 
+diff --git a/zh/index.mdx b/zh/index.mdx
+index 9a0dfe4..1afceb4 100644
+--- a/zh/index.mdx
++++ b/zh/index.mdx
+@@ -7,7 +7,7 @@ description: '面向 10+ AI coding 平台的一站式 AI 框架和工具集'
+ 
+ AI 的能力像藤蔓一样生长，充满活力但四处蔓延。Trellis 是 AI 的脚手架，引导它沿着规范的路径前进。
+ 
+-支持平台：Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI，以及任何读取 `.agents/skills/` 规范的 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。
++支持平台：Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、PI-Desktop、Oh My Pi、Reasonix、ZCode、Trae、Grok Build、Kimi Code、Snow CLI，以及任何读取 `.agents/skills/` 规范的 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）。
+ 
+ ### 一句话定位
+ 
+@@ -25,7 +25,7 @@ AI 的能力像藤蔓一样生长，充满活力但四处蔓延。Trellis 是 AI
+ | 跨会话记忆   | 无               | 无                   | 无              | **workspace journal 持久化**                                                |
+ | 工作流固化   | 无               | 无                   | 无              | **Auto-trigger skill + check sub-agent 验证循环**                           |
+ | 团队共享     | 单人             | 单人                 | 可分享但无标准  | **Git 版本化 Spec 库**                                                      |
+-| 支持平台     | Cursor 专属      | Claude Code 专属     | 按平台          | **22 个已配置平台 + 共享 skill 生态**                                       |
++| 支持平台     | Cursor 专属      | Claude Code 专属     | 按平台          | **23 个已配置平台 + 共享 skill 生态**                                       |
+ 
+ ### 核心概念速览
+ 
+diff --git a/zh/start/install-and-first-task.mdx b/zh/start/install-and-first-task.mdx
+index f65af92..326d210 100644
+--- a/zh/start/install-and-first-task.mdx
++++ b/zh/start/install-and-first-task.mdx
+@@ -31,9 +31,9 @@ trellis init -u your-name --pi
+ 
+ `your-name` 会成为你的开发者身份，在 `.trellis/workspace/your-name/` 创建个人工作区。
+ 
+-支持的 flag：`--claude`、`--cursor`、`--opencode`、`--codex`、`--kiro`、`--gemini`、`--qoder`、`--codebuddy`、`--copilot`、`--droid`、`--pi`、`--antigravity`、`--devin`（别名：`--windsurf`，已废弃）、`--kilo`、`--reasonix`、`--zcode`、`--omp`、`--trae`、`--grok`、`--kimi`、`--snow`、`--dsh`。
++支持的 flag：`--claude`、`--cursor`、`--opencode`、`--codex`、`--kiro`、`--gemini`、`--qoder`、`--codebuddy`、`--copilot`、`--droid`、`--pi`、`--pi-desktop`、`--antigravity`、`--devin`（别名：`--windsurf`，已废弃）、`--kilo`、`--reasonix`、`--zcode`、`--omp`、`--trae`、`--grok`、`--kimi`、`--snow`、`--dsh`。
+ 
+-除了这 22 个已配置平台，任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）也能直接消费 Trellis：Codex 的 skill 就写在这个目录下，这些文件能被该生态的其他 agent 直接读取。
++除了这 23 个已配置平台，任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Warp 等）也能直接消费 Trellis：Codex 的 skill 就写在这个目录下，这些文件能被该生态的其他 agent 直接读取。
+ 
+ ### 升级
+ 
