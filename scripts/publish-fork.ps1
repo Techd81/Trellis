@@ -98,34 +98,38 @@ try {
         Write-Host "    README.md + LICENSE copied into packages/cli"
     }
 
-    $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("trellis-publish-" + [guid]::NewGuid().ToString("N"))
-    New-Item -ItemType Directory -Path $stage -Force | Out-Null
+    $manifestPath = Join-Path $packageDir "package.json"
+    $originalManifest = Get-Content $manifestPath -Raw
     try {
-        # `npm publish` from the folder ships the raw manifest, and
-        # `@mindfoldhq/trellis-core` is declared as `workspace:*` there — npm
-        # cannot install that. `pnpm pack` rewrites it to the real version, so
-        # the tarball is what gets published.
-        Invoke-Step "Packing with pnpm (rewrites workspace:*)" {
-            & pnpm --filter "@awesome_dura/trellis" pack --pack-destination $stage
-            if ($LASTEXITCODE -ne 0) { throw "pnpm pack failed" }
-            $tarball = Get-ChildItem $stage -Filter *.tgz | Select-Object -First 1
-            if (-not $tarball) { throw "no tarball was produced" }
-            $manifest = (& tar -xOf $tarball.FullName package/package.json) -join "`n"
-            if ($manifest -match "workspace:") {
-                throw "the packed manifest still declares workspace: dependencies — npm cannot install that"
-            }
-            Write-Host ("    {0} ({1} kB), dependencies resolved" -f $tarball.Name, [math]::Round($tarball.Length / 1kb))
+        # `npm publish` ships the manifest as-is, and `@mindfoldhq/trellis-core`
+        # is declared as `workspace:*` — an install-time failure for registry
+        # consumers. Pin the real version for the publish, restore afterwards.
+        $coreVersion = (Get-Content (Join-Path $repo "packages/core/package.json") -Raw | ConvertFrom-Json).version
+        $patched = $originalManifest.Replace(
+            '"@mindfoldhq/trellis-core": "workspace:*"',
+            "`"@mindfoldhq/trellis-core`": `"$coreVersion`""
+        )
+        if ($patched -match "workspace:") {
+            throw "packages/cli/package.json still declares a workspace: dependency after pinning"
         }
+        Set-Content -Path $manifestPath -Value $patched -NoNewline
+        Write-Host "    pinned @mindfoldhq/trellis-core to $coreVersion for this publish"
 
         Invoke-Step ($(if ($DryRun) { "Publishing (dry run)" } else { "Publishing to npm" })) {
-            $publishArgs = @("publish", $tarball.FullName, "--access", "public", "--tag", $Tag)
-            if ($DryRun) { $publishArgs += "--dry-run" }
-            if ($Otp) { $publishArgs += "--otp=$Otp" }
-            & npm @publishArgs
-            if ($LASTEXITCODE -ne 0) { throw "npm publish failed (logged in as: $((& npm whoami 2>&1) -join ' '))" }
+            Push-Location $packageDir
+            try {
+                $publishArgs = @("publish", "--access", "public", "--ignore-scripts", "--tag", $Tag)
+                if ($DryRun) { $publishArgs += "--dry-run" }
+                if ($Otp) { $publishArgs += "--otp=$Otp" }
+                & npm @publishArgs
+                if ($LASTEXITCODE -ne 0) { throw "npm publish failed (logged in as: $((& npm whoami 2>&1) -join ' '))" }
+            } finally {
+                Pop-Location
+            }
         }
     } finally {
-        Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+        Set-Content -Path $manifestPath -Value $originalManifest -NoNewline
+        Write-Host "    packages/cli/package.json restored to the workspace protocol"
     }
 
     if (-not $DryRun) {
@@ -133,6 +137,11 @@ try {
             $version = (Get-Content (Join-Path $packageDir "package.json") -Raw | ConvertFrom-Json).version
             $latest = (& npm view "@awesome_dura/trellis@$version" version 2>&1 | Out-String).Trim()
             Write-Host "    registry now serves: $latest"
+            $deps = (& npm view "@awesome_dura/trellis@$version" dependencies --json 2>&1 | Out-String).Trim()
+            Write-Host ("    dependencies on the registry: {0}" -f ($deps -replace '\s+', ' '))
+            if ($deps -match 'workspace') {
+                throw "the published manifest still carries a workspace: dependency — nobody can install this version"
+            }
             Write-Host "    install it: npm install -g @awesome_dura/trellis@$Tag"
         }
     }
