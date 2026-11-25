@@ -52,8 +52,8 @@ Push-Location $repo
 try {
     Invoke-Step "Checking the checkout" {
         $branch = (& git -C $repo rev-parse --abbrev-ref HEAD | Out-String).Trim()
-        if ($branch -ne "feat/pi-desktop") {
-            throw "publish from feat/pi-desktop, not '$branch'"
+        if ($branch -ne "main") {
+            throw "publish from main, not '$branch'"
         }
         $status = @(& git -C $repo status --porcelain) |
             Where-Object { $_ -notmatch '^\s*[Mm? ]{1,2}\s+(docs-site|marketplace)\s*$' }

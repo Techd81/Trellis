@@ -5,7 +5,7 @@
     Build this fork and install it as the global `trellis` command.
 
 .DESCRIPTION
-    Run this from a clone of Techd81/Trellis sitting on the `feat/pi-desktop`
+    Run this from a clone of Techd81/Trellis sitting on the `main`
     branch. It installs dependencies, runs the PI-Desktop tests, builds core +
     cli, packs the CLI with pnpm (which rewrites `workspace:*` to real version
     numbers) and installs that tarball with npm.
@@ -48,8 +48,8 @@ try {
             }
         }
         $branch = (& git -C $repo rev-parse --abbrev-ref HEAD | Out-String).Trim()
-        if ($branch -ne "feat/pi-desktop") {
-            Write-Host "    warning: on '$branch', not 'feat/pi-desktop' — the built CLI may lack PI-Desktop" -ForegroundColor Yellow
+        if ($branch -ne "main") {
+            Write-Host "    warning: on '$branch', not 'main' — the built CLI may lack PI-Desktop" -ForegroundColor Yellow
         } else {
             Write-Host "    branch: $branch"
         }
@@ -91,7 +91,7 @@ try {
         Write-Host "    trellis --version: $(Get-TrellisVersion)"
         $help = @(& trellis init --help 2>&1)
         if (-not ($help -match '--pi-desktop')) {
-            throw "the installed CLI does not expose --pi-desktop; is the checkout on feat/pi-desktop?"
+            throw "the installed CLI does not expose --pi-desktop; is the checkout on main?"
         }
         Write-Host "    --pi-desktop: present" -ForegroundColor Green
     }

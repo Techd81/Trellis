@@ -9,10 +9,10 @@
 
 分支模型：
 
-- `main` —— 永远与 `upstream/main` 齐平，不放任何本地改动。
-- `feat/pi-desktop` —— 全部适配改动，基于 `main` 重基。日常用的是这条分支。
+- `main` —— **本 fork 的产品分支**：上游 + PI-Desktop 适配。GitHub 默认分支、npm 发布源都是它。
+- 跟随上游：`scripts/sync-upstream.ps1` 把 `upstream/main` 合并进 `main` 并推送。
 
-## 相对上游改了什么（37 个文件）
+## 相对上游改了什么
 
 | 区域 | 文件 | 作用 |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ pwsh ./scripts/publish-fork.ps1          # 真发布
 pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，带上一次性验证码
 ```
 
-脚本会：校验在 `feat/pi-desktop` 且工作区干净 → `pnpm build` → 把根目录的 `README.md`/`LICENSE` 复制进 `packages/cli`（npm 只打包包目录里的文件）→ `npm publish --access public --ignore-scripts` → 回读 registry 版本。
+脚本会：校验在 `main` 且工作区干净 → `pnpm build` → 把根目录的 `README.md`/`LICENSE` 复制进 `packages/cli` → 临时把 `workspace:*` 钉成真实版本号 → `npm publish --access public --ignore-scripts` → 回读 registry 并校验依赖不再是 workspace → 还原 `package.json`。
 
 - `--access public`：scoped 包默认私有，必须显式公开。
 - `--ignore-scripts`：`prepublishOnly` 会跑全量测试（Windows 上有 23 个既有环境失败）并用 `cp` 复制文件（cmd 下没有该命令），所以发布时跳过脚本。
@@ -93,9 +93,9 @@ pwsh ./scripts/publish-fork.ps1 -Otp 123456   # 账号 2FA 覆盖写操作时，
 pwsh ./scripts/sync-upstream.ps1
 ```
 
-脚本按顺序做：脏工作区检查 → `fetch upstream` → `main` 快进 → 把 `feat/pi-desktop` 重基到新 `main` → 锁文件变了才 `pnpm install` → `pnpm build` → 铺进全局包 → 跑 PI-Desktop 靶向测试。
+脚本按顺序做：脏工作区检查（必须在 `main` 上）→ `fetch upstream` → 把 `upstream/main` 合并进 `main` 并推送 → 锁文件变了才 `pnpm install` → `pnpm build` → 打包并安装全局 CLI → 跑 PI-Desktop 靶向测试。
 
-遇到重基冲突会停下并列出冲突文件，不会替你丢改动。人工解决后 `git rebase --continue` 即可。
+遇到合并冲突会停下并列出冲突文件，不会替你丢改动。人工解决后 `git add` + `git merge --continue`（或 `git merge --abort`）即可。
 
 冲突热点（上游一改这些，八成要手接）：`types/ai-tools.ts`、`commands/init.ts`、`cli/index.ts`、`configurators/pi.ts`、`templates/pi/extensions/trellis/index.ts.txt`。
 

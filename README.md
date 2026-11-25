@@ -1,7 +1,7 @@
-> **Private fork — `feat/pi-desktop`.** This branch ships [PI-Desktop](https://github.com/vastsa/PI-Desktop) as a
-> first-class platform: `trellis init --pi-desktop`, `trellis pi-desktop install|status|uninstall`.
-> Install it with `npm install -g @awesome_dura/trellis@latest`, or build from source with
-> `pwsh ./scripts/install-fork.ps1`. [FORK.md](FORK.md) covers following upstream.
+> **Install with `npm install -g @awesome_dura/trellis@latest`.** This repository ships
+> [PI-Desktop](https://github.com/vastsa/PI-Desktop) as a first-class platform:
+> `trellis init --pi-desktop`, `trellis pi-desktop install|status|uninstall`.
+> Build from source with `pwsh ./scripts/install-fork.ps1`; [FORK.md](FORK.md) covers following upstream.
 
 <p align="center">
 <picture>

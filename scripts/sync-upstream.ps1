@@ -2,21 +2,21 @@
 #requires -Version 7.0
 <#
 .SYNOPSIS
-    Rebase this fork onto upstream/main and refresh the globally installed CLI.
+    Merge upstream/main into this fork's main branch and refresh the global CLI.
 
 .DESCRIPTION
     1. refuses to run on a dirty working tree
-    2. fetches upstream and keeps the fork's main branch pointing at it
-    3. rebases feat/pi-desktop onto upstream/main
+    2. fetches upstream and merges upstream/main into main
+    3. pushes main to origin
     4. runs pnpm install only when the lockfile moved or node_modules is missing
-    5. rebuilds core + cli and mirrors dist into the global npm package
+    5. rebuilds core + cli, then installs the packed CLI globally
     6. runs the PI-Desktop test files
 
-    Conflicts stop the script with the conflicted paths printed; nothing is
-    discarded, so `git rebase --continue` (or `--abort`) is the next step.
+    `main` is this fork's product branch: it carries the PI-Desktop adaptation on
+    top of upstream, and it is what npm publishes and what GitHub renders.
 
-    The rebase base is `upstream/main`, never a local `main`: this checkout is a
-    git worktree, where the fork's `main` branch is usually checked out nowhere.
+    Conflicts stop the script with the conflicted paths printed; nothing is
+    discarded, so `git merge --abort` or a manual resolution is the next step.
 
 .PARAMETER SkipInstall
     Do not touch the globally installed CLI.
@@ -35,7 +35,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$branch = "feat/pi-desktop"
+$branch = "main"
 $upstreamBranch = "upstream/main"
 $repo = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot "lib/fork-common.ps1")
@@ -72,39 +72,32 @@ try {
         if ($status) {
             throw "Working tree is dirty. Commit or stash first:`n$($status -join "`n")"
         }
+        $current = Get-GitOutput rev-parse --abbrev-ref HEAD
+        if ($current -ne $branch) {
+            throw "on '$current'; switch to '$branch' first: git checkout $branch"
+        }
+        $script:beforeMerge = Get-GitOutput rev-parse HEAD
     }
 
-    Invoke-Step "Fetching upstream" {
-        $previous = Get-GitOutput rev-parse $upstreamBranch
+    Invoke-Step "Merging $upstreamBranch" {
         & git -C $repo fetch upstream --prune --quiet
         if ($LASTEXITCODE -ne 0) { throw "git fetch upstream failed" }
         $incoming = [int](Get-GitOutput rev-list --count "HEAD..$upstreamBranch")
         Write-Host "    commits upstream has that $branch lacks: $incoming"
-        # Keep the fork's main on upstream without checking it out here.
-        & git -C $repo push origin "$upstreamBranch`:refs/heads/main" 2>&1 | Select-Object -Last 1
-        if ($LASTEXITCODE -ne 0) { throw "could not fast-forward origin/main" }
-        $script:previousUpstream = $previous
-    }
-
-    Invoke-Step "Rebasing $branch onto $upstreamBranch" {
-        Invoke-Git checkout $branch
-        $head = Get-GitOutput rev-parse HEAD
-        $tip = Get-GitOutput rev-parse $upstreamBranch
-        $base = Get-GitOutput merge-base HEAD $upstreamBranch
-        if ($base -eq $tip) {
-            Write-Host "    already based on $upstreamBranch ($($head.Substring(0, 7)))"
+        if ($incoming -eq 0) {
+            Write-Host "    already up to date"
         } else {
-            & git -C $repo rebase $upstreamBranch
+            & git -C $repo merge --no-edit $upstreamBranch
             if ($LASTEXITCODE -ne 0) {
                 $conflicts = @(& git -C $repo diff --name-only --diff-filter=U)
                 Write-Host ""
-                Write-Host "Rebase stopped on conflicts:" -ForegroundColor Yellow
+                Write-Host "Merge stopped on conflicts:" -ForegroundColor Yellow
                 $conflicts | ForEach-Object { Write-Host "    $_" }
-                Write-Host "Resolve them, then: git rebase --continue   (or: git rebase --abort)"
+                Write-Host "Resolve them and commit, then re-run — or: git merge --abort"
                 exit 1
             }
-            $ahead = Get-GitOutput rev-list --count "$upstreamBranch..HEAD"
-            Write-Host "    rebased $ahead commit(s) onto $upstreamBranch"
+            Invoke-Git push origin $branch
+            Write-Host "    merged and pushed"
         }
     }
 
@@ -121,7 +114,7 @@ try {
     }
 
     Invoke-Step "Installing dependencies" {
-        $lockMoved = @(& git -C $repo diff --name-only $script:previousUpstream $upstreamBranch -- pnpm-lock.yaml)
+        $lockMoved = @(& git -C $repo diff --name-only $script:beforeMerge HEAD -- pnpm-lock.yaml)
         if ($lockMoved -or -not (Test-Path (Join-Path $repo "node_modules"))) {
             & pnpm install
             if ($LASTEXITCODE -ne 0) { throw "pnpm install failed" }
@@ -166,6 +159,7 @@ try {
     if (-not $SkipInstall) {
         Write-Host ("    trellis --version: {0}" -f (Get-TrellisVersion))
     }
+    Write-Host "    publish a release: pwsh ./scripts/publish-fork.ps1"
 } finally {
     Pop-Location
 }
