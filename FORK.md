@@ -1,0 +1,79 @@
+# 私有 fork 维护说明（PI-Desktop 适配）
+
+本仓库是 [mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis) 的私有 fork，唯一目的是让 **PI-Desktop** 成为 Trellis 的一等平台（第 23 个）。上游不合并这份改动，所以维护方式固定为：**上游跟进 + 本地重基**。
+
+| 远端 | 地址 | 用途 |
+| --- | --- | --- |
+| `upstream` | `mindfold-ai/Trellis` | 只读，跟随官方发布 |
+| `origin` | `Techd81/Trellis` | 本 fork，自用 |
+
+分支模型：
+
+- `main` —— 永远与 `upstream/main` 齐平，不放任何本地改动。
+- `feat/pi-desktop` —— 全部适配改动，基于 `main` 重基。日常用的是这条分支。
+
+## 相对上游改了什么（37 个文件）
+
+| 区域 | 文件 | 作用 |
+| --- | --- | --- |
+| 平台注册 | `packages/cli/src/types/ai-tools.ts` | 新增 `pi-desktop` 条目；`pi` 增加 `detectionPaths`，避免纯桌面仓库被误判为 pi CLI 项目 |
+| 模板收集 | `configurators/{pi,pi-desktop,index,shared}.ts` | `collectPiSurface()` 复用 pi 的共享面；`pi-desktop` 另加插件外壳 |
+| 插件模板 | `templates/pi-desktop/{manifest.json,main.js,index.ts,subagents.ts}` | 宿主插件清单、启动脚本、全局 sub-agent 定义 |
+| 宿主扩展 | `templates/pi/extensions/trellis/index.ts.txt` | 桌面端运行期分支：不注册 spawn 型工具、`Task` 派发补 `Active task:`、用 shell ticket 传会话身份 |
+| 安装桥 | `commands/pi-desktop/**`、`constants/pi-desktop.ts` | `install` / `status` / `uninstall` |
+| CLI 接线 | `cli/index.ts`、`commands/init.ts` | `--pi-desktop` 与 `pi-desktop` 子命令 |
+| 脚本 | `templates/trellis/scripts/common/{task_store,workflow_phase}.py` + `.trellis/scripts` 双胞胎 | `.pi-desktop` 加入 sub-agent 平台表；`pi-desktop → Pi` 标记 |
+| 测试 | `test/commands/pi-desktop.test.ts`、`test/templates/pi-desktop.test.ts`、`test/templates/trellis.test.ts` | 46 条（30 + 16） |
+| 文档 | `README.md`、`README_CN.md`、`.trellis/spec/cli/backend/{platform-integration,commands-pi-desktop,index}.md` | 平台计数 22 → 23、适配说明 |
+
+`docs-site` 是子模块，文档改动不在本仓库：对应内容在 fork 的 `Techd81/docs` 分支 `docs/pi-desktop`（PR 已关闭，留给自用）。
+
+## 日常安装（让 `trellis` 命令用上本 fork）
+
+全局 npm 包里已有官方 0.6.17（提供 `bin` 与 `@mindfoldhq/trellis-core` 依赖），本 fork 只替换其中的构建产物：
+
+```powershell
+pnpm build                                                   # 或 pnpm build:cli
+robocopy .\packages\cli\dist  "$(npm root -g)\@mindfoldhq\trellis\dist"  /MIR
+robocopy .\packages\core\dist "$(npm root -g)\@mindfoldhq\trellis\node_modules\@mindfoldhq\trellis-core\dist" /MIR
+```
+
+验证：
+
+```powershell
+trellis --version
+trellis init --help | Select-String -- --pi-desktop
+trellis pi-desktop --help
+```
+
+回退到官方版：
+
+```powershell
+npm install -g @mindfoldhq/trellis --force
+```
+
+> 之所以不用 `npm i -g ./packages/cli`：包内 `@mindfoldhq/trellis-core` 用的是 `workspace:*` 协议，tarball 装不上。
+
+## 跟随上游更新
+
+```powershell
+pwsh ./scripts/sync-upstream.ps1
+```
+
+脚本按顺序做：脏工作区检查 → `fetch upstream` → `main` 快进 → 把 `feat/pi-desktop` 重基到新 `main` → 锁文件变了才 `pnpm install` → `pnpm build` → 铺进全局包 → 跑 PI-Desktop 靶向测试。
+
+遇到重基冲突会停下并列出冲突文件，不会替你丢改动。人工解决后 `git rebase --continue` 即可。
+
+冲突热点（上游一改这些，八成要手接）：`types/ai-tools.ts`、`commands/init.ts`、`cli/index.ts`、`configurators/pi.ts`、`templates/pi/extensions/trellis/index.ts.txt`。
+
+## 更新后必做的验证
+
+1. 靶向测试（脚本已跑）：
+   `npx vitest run --maxWorkers=3 test/commands/pi-desktop.test.ts test/templates/pi-desktop.test.ts test/registry-invariants.test.ts`
+2. 双胞胎字节一致：`.trellis/scripts/**` 与 `packages/cli/src/templates/trellis/scripts/**` 必须逐文件同哈希（28 个源码文件）。
+3. 真机：重启 PI-Desktop → 在项目里跑一次含 `task.py current` 的 shell 命令 → `.trellis/.runtime/shell-tickets/` 应出现票据，`task.py current --source` 应显示 `session:pi_*`。
+   桌面端不靠环境变量传递身份：宿主 shell 工具叫 `Bash`，且方言（PowerShell / cmd / git-bash / bash）由用户配置、事件里不报，所以走 shell ticket。
+
+## 已知环境限制
+
+Windows 本机跑全量测试有 23 个既有失败（`python3` 的 Store 别名、`chmod`、marketplace 的 CRLF 镜像、`TMPDIR=/tmp`、npm mock），与本 fork 无关，Linux CI 上不出现。脚本只跑靶向测试，正是为了绕开它们。
