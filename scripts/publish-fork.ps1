@@ -63,6 +63,25 @@ try {
         }
     }
 
+    Invoke-Step "Checking npm auth and package scope" {
+        $pkgName = (Get-Content (Join-Path $packageDir "package.json") -Raw | ConvertFrom-Json).name
+        $scope = ($pkgName -split "/")[0].TrimStart("@")
+        $who = (@(& npm whoami 2>&1) -join " ").Trim()
+        Write-Host "    package $pkgName (scope '@$scope')"
+        if ($LASTEXITCODE -ne 0 -or $who -match "E40|ENEEDAUTH") {
+            if ($DryRun) {
+                Write-Host "    not logged in — a real publish needs: npm login" -ForegroundColor Yellow
+            } else {
+                throw "not logged in to npm. Run: npm login, then re-run this script"
+            }
+        } else {
+            Write-Host "    logged in as '$who'"
+            if ($who -ne $scope) {
+                Write-Host "    note: '@$scope' is not your npm username, so publishing needs an organization named '$scope'." -ForegroundColor Yellow
+            }
+        }
+    }
+
     Invoke-Step "Building core + cli" {
         & pnpm build
         if ($LASTEXITCODE -ne 0) { throw "pnpm build failed" }
