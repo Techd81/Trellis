@@ -41,15 +41,17 @@ git -C docs-site apply ../docs-site.pi-desktop.patch
 
 之所以必须打上：`registry-invariants` 会核对 `docs-site` 里的平台计数和 init flag 列表，缺了 `--pi-desktop` 就会红（`beta/start/install-and-first-task.mdx` 等）。上游把子模块指针推进后，用 `git apply --3way` 重打，冲突按语义手工合并即可。
 
-## 日常安装（让 `trellis` 命令用上本 fork）
+## 安装：让 `trellis` 命令用上本 fork
 
-全局 npm 包里已有官方 0.6.17（提供 `bin` 与 `@mindfoldhq/trellis-core` 依赖），本 fork 只替换其中的构建产物：
+> ⚠️ README 里那句 `npm install -g @mindfoldhq/trellis@latest` 装的是**上游 npm 包**，里面没有 `--pi-desktop`。想用本 fork 请走下面这条。
 
 ```powershell
-pnpm build                                                   # 或 pnpm build:cli
-robocopy .\packages\cli\dist  "$(npm root -g)\@mindfoldhq\trellis\dist"  /MIR
-robocopy .\packages\core\dist "$(npm root -g)\@mindfoldhq\trellis\node_modules\@mindfoldhq\trellis-core\dist" /MIR
+pwsh ./scripts/install-fork.ps1
 ```
+
+脚本顺序：`pnpm install` → PI-Desktop 靶向测试 → `pnpm build` → `pnpm pack`（把 `workspace:*` 重写成真实版本号）→ `npm i -g` 打出来的 tarball → 校验 `--pi-desktop` 存在。
+
+`@mindfoldhq/trellis-core` 由 npm 正常拉取，所以**不需要**先装官方包，也不需要往全局包里手工铺 `dist`。
 
 验证：
 
@@ -64,8 +66,6 @@ trellis pi-desktop --help
 ```powershell
 npm install -g @mindfoldhq/trellis --force
 ```
-
-> 之所以不用 `npm i -g ./packages/cli`：包内 `@mindfoldhq/trellis-core` 用的是 `workspace:*` 协议，tarball 装不上。
 
 ## 跟随上游更新
 

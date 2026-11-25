@@ -1,3 +1,8 @@
+> **私有 fork —— `feat/pi-desktop` 分支。** 本分支把 [PI-Desktop](https://github.com/vastsa/PI-Desktop) 作为一等平台接入：
+> `trellis init --pi-desktop`、`trellis pi-desktop install|status|uninstall`。下面 `npm install -g @mindfoldhq/trellis`
+> 装的是**上游**包，不含这些能力；要装本分支的构建，在仓库根目录执行 `pwsh ./scripts/install-fork.ps1`，
+> 同步上游的流程见 [FORK.md](FORK.md)。
+
 <p align="center">
 <picture>
 <source srcset="assets/trellis.png" media="(prefers-color-scheme: dark)">

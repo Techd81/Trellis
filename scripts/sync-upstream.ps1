@@ -38,6 +38,7 @@ $ErrorActionPreference = "Stop"
 $branch = "feat/pi-desktop"
 $upstreamBranch = "upstream/main"
 $repo = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot "lib/fork-common.ps1")
 
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
@@ -61,17 +62,6 @@ function Invoke-Step {
     Write-Host ""
     Write-Host "==> $Message" -ForegroundColor Cyan
     & $Body
-}
-
-function Copy-BuildOutput {
-    param([string]$Source, [string]$Destination)
-    if (-not (Test-Path $Source)) { throw "missing build output: $Source" }
-    if (-not (Test-Path $Destination)) {
-        throw "target package not installed: $Destination (run: npm install -g @mindfoldhq/trellis --force)"
-    }
-    & robocopy $Source $Destination /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
-    Write-Host ("    mirrored {0} -> {1}" -f $Source, $Destination)
 }
 
 Push-Location $repo
@@ -146,11 +136,8 @@ try {
     }
 
     if (-not $SkipInstall) {
-        Invoke-Step "Refreshing the globally installed CLI" {
-            $npmRoot = (& npm root -g).Trim()
-            $packageRoot = Join-Path $npmRoot "@mindfoldhq/trellis"
-            Copy-BuildOutput (Join-Path $repo "packages/cli/dist") (Join-Path $packageRoot "dist")
-            Copy-BuildOutput (Join-Path $repo "packages/core/dist") (Join-Path $packageRoot "node_modules/@mindfoldhq/trellis-core/dist")
+        Invoke-Step "Installing the freshly built CLI" {
+            Install-TrellisCli -Repo $repo
         }
     }
 
@@ -158,22 +145,11 @@ try {
         Invoke-Step "Running the PI-Desktop tests" {
             Push-Location (Join-Path $repo "packages/cli")
             try {
-                # registry-invariants shells out to `python3`, which resolves to a
-                # Microsoft Store stub on a stock Windows install. Point it at a real
-                # interpreter unless the caller already chose one.
-                if (-not $env:PYTHON_CMD) {
-                    foreach ($candidate in @("python", "py", "python3")) {
-                        $found = Get-Command $candidate -ErrorAction SilentlyContinue | Select-Object -First 1
-                        if ($found -and $found.Source -notmatch "WindowsApps") {
-                            $env:PYTHON_CMD = $found.Source
-                            break
-                        }
-                    }
-                    if ($env:PYTHON_CMD) {
-                        Write-Host "    PYTHON_CMD=$env:PYTHON_CMD"
-                    } else {
-                        Write-Host "    no real python interpreter found; registry-invariants may fail" -ForegroundColor Yellow
-                    }
+                $python = Resolve-TrellisPython
+                if ($python) {
+                    Write-Host "    PYTHON_CMD=$python"
+                } else {
+                    Write-Host "    no real python interpreter found; registry-invariants may fail" -ForegroundColor Yellow
                 }
                 & npx vitest run --maxWorkers=3 test/commands/pi-desktop.test.ts test/templates/pi-desktop.test.ts test/registry-invariants.test.ts
                 if ($LASTEXITCODE -ne 0) { throw "tests failed" }
@@ -188,10 +164,7 @@ try {
     Write-Host ("    {0}" -f (Get-GitOutput log --oneline -1))
     Write-Host ("    {0}: {1}" -f $upstreamBranch, (Get-GitOutput log --oneline -1 $upstreamBranch))
     if (-not $SkipInstall) {
-        $versionLine = @(& trellis --version 2>&1) |
-            Where-Object { $_ -match '^\d+\.\d+\.\d+' } |
-            Select-Object -Last 1
-        Write-Host ("    trellis --version: {0}" -f $versionLine)
+        Write-Host ("    trellis --version: {0}" -f (Get-TrellisVersion))
     }
 } finally {
     Pop-Location

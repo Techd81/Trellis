@@ -1,3 +1,9 @@
+> **Private fork — `feat/pi-desktop`.** This branch adds [PI-Desktop](https://github.com/vastsa/PI-Desktop) as a
+> first-class platform: `trellis init --pi-desktop`, `trellis pi-desktop install|status|uninstall`.
+> The `npm install -g @mindfoldhq/trellis` instructions below install the **upstream** package, which does not
+> include it. To install this build, run `pwsh ./scripts/install-fork.ps1`; see [FORK.md](FORK.md) for the
+> follow-upstream workflow.
+
 <p align="center">
 <picture>
 <source srcset="assets/trellis.png" media="(prefers-color-scheme: dark)">
